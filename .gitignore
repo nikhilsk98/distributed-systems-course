@@ -1,1 +1,6 @@
 hw02/terraform.tfvars
+.DS_Store
+__pycache__/
+*.pyc
+hw3/buffered.txt
+hw3/unbuffered.txt

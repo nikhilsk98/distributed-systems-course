@@ -1,0 +1,5 @@
+# generated large inputs and per-session files
+data/gen_*.txt
+ips.txt
+tasks.txt
+__pycache__/

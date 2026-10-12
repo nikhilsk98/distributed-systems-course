@@ -1,0 +1,25 @@
+Part II Observations
+
+Atomic Counter:
+The normal counter had a data race and produced an incorrect result. The atomic counter always produced the expected result.
+
+Plain Map:
+Concurrent writes to a normal Go map caused a "concurrent map writes" error.
+
+Mutex:
+Mean execution time: 10.73 ms.
+Mutex safely protects the map by allowing only one goroutine at a time into the critical section.
+
+RWMutex:
+Mean execution time: 11.07 ms.
+RWMutex was not faster in this test because the workload was mostly writes. Write locks are still exclusive.
+
+sync.Map:
+Mean execution time: 6.65 ms.
+sync.Map was the fastest in these runs and safely supported concurrent access.
+
+File Access:
+Buffered writing should be faster because many small writes are collected in memory and written in larger batches instead of repeatedly writing directly to the file.
+
+Context Switching:
+GOMAXPROCS(1) keeps goroutine scheduling on one OS thread. Allowing multiple OS threads can change the switching cost because scheduling and synchronization may occur across threads.

@@ -1,0 +1,33 @@
+Concurrent Server Design
+
+The current server handles one client at a time, so other clients must wait until the current client finishes.
+
+I would change the server so that every accepted client connection is handled in a separate goroutine:
+
+go handleConnection(conn)
+
+This allows multiple clients to be processed concurrently.
+
+Because all goroutines may access the same album storage, I would protect the shared storage using sync.RWMutex.
+
+For reading:
+RLock()
+RUnlock()
+
+For writing:
+Lock()
+Unlock()
+
+RWMutex is useful because multiple clients can read at the same time, while writes remain exclusive.
+
+As the number of requests increases, the server can process multiple clients concurrently instead of processing them sequentially.
+
+To prevent one client from starving others or creating too many goroutines, I would use a bounded worker pool or semaphore.
+
+Worst case:
+If many clients perform writes simultaneously, they will compete for the write lock and throughput can decrease.
+
+Possible improvement:
+Keep critical sections small, use a bounded worker pool, and reduce contention on shared storage.
+
+The Album data type does not need to change. The main change is adding synchronization around the shared storage.

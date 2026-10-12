@@ -1,1 +1,15 @@
 hw02/terraform.tfvars
+.DS_Store
+__pycache__/
+*.pyc
+hw3/buffered.txt
+hw3/unbuffered.txt
+.DS_Store
+__pycache__/
+*.pyc
+.DS_Store
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.zip
+*.tar

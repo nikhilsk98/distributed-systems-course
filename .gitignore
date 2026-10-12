@@ -8,3 +8,8 @@ hw3/unbuffered.txt
 __pycache__/
 *.pyc
 .DS_Store
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.zip
+*.tar

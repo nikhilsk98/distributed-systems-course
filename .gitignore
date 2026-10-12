@@ -4,3 +4,7 @@ __pycache__/
 *.pyc
 hw3/buffered.txt
 hw3/unbuffered.txt
+.DS_Store
+__pycache__/
+*.pyc
+.DS_Store

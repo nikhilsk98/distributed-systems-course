@@ -3,5 +3,6 @@ global:
 
 scrape_configs:
   - job_name: product-api
-    static_configs:
-      - targets: ["app:8080"]
+    file_sd_configs:
+      - files: ["/etc/prometheus/sd/targets.json"]
+        refresh_interval: 10s

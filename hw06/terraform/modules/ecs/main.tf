@@ -47,4 +47,16 @@ resource "aws_ecs_service" "this" {
     security_groups  = var.security_group_ids
     assign_public_ip = true
   }
+
+  health_check_grace_period_seconds = 60
+
+  load_balancer {
+    target_group_arn = var.target_group_arn
+    container_name   = "${var.service_name}-container"
+    container_port   = var.container_port
+  }
+
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 }

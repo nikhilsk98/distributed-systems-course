@@ -29,3 +29,10 @@ src/server
 src/product-service
 *.bak
 .DS_Store
+venv/
+
+# Generated at runtime
+monitoring/targets.json
+monitoring/targets.json.tmp
+locust/results/
+src/main

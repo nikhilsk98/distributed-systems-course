@@ -60,3 +60,7 @@ variable "memory" {
   default     = "512"
   description = "Memory (MiB)"
 }
+
+variable "target_group_arn" {
+  type = string
+}

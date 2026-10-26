@@ -34,7 +34,8 @@ module "ecs" {
   log_group_name     = module.logging.log_group_name
   ecs_count          = var.ecs_count
   region             = var.aws_region
-  depends_on         = [docker_registry_image.app]
+  target_group_arn   = aws_lb_target_group.app.arn
+  depends_on         = [docker_registry_image.app, aws_lb_listener.http]
 }
 
 

@@ -11,6 +11,7 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
+      - ./monitoring:/etc/prometheus/sd
     depends_on:
       - app
 

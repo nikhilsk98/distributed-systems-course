@@ -1,0 +1,31 @@
+**.tfvars
+**.tfstate
+**.tfstate.*
+**/.terraform/
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Terraform state and local settings
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+crash.log
+
+# Credentials
+.env
+.env.*
+!.env.example
+.aws/
+*.pem
+*.key
+
+# Build outputs and backups
+src/server
+src/product-service
+*.bak
+.DS_Store

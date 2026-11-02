@@ -192,7 +192,8 @@ for spec in CONTENT["slides"]:
         s.notes_slide.notes_text_frame.text = spec["notes"]
 
 prs.core_properties.title = "File-transfer service: three experiments"
-prs.core_properties.author = "Nikhil"
+prs.core_properties.author = "Nikhil Shivakumar"
+prs.core_properties.last_modified_by = "Nikhil Shivakumar"
 prs.save(OUT)
 print("saved", OUT)
 

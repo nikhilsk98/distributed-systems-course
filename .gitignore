@@ -20,3 +20,8 @@ credentials
 
 # midterm: never commit terraform variable files
 *.tfvars
+
+# AI-assistant config files: never track
+CLAUDE.md
+CLAUDE.local.md
+.claude/

@@ -1,0 +1,1 @@
+2026-11-02T10:21Z  INCIDENT: targeted terraform apply (cooldown change) reset services to task-def rev 1 (loss 0); new tasks started 10:22:08Z; drivers stopped 10:22:12Z; services set back to backend:6 / gateway:5; interrupted run E2/f64k_open05_rounds05/trial3 deleted and re-run. No completed run overlapped the bad tasks.

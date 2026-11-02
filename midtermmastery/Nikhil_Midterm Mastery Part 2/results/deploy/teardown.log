@@ -1,0 +1,13 @@
+teardown start 2026-11-02T10:59:54Z
+
+==> [1] Looking for the stack
+28 resources in the Terraform state
+
+==> [2] Deleting the temporary files under the bucket prefix
+deleted everything under s3://file-transfer-719602427292-nsk/tmp/
+
+==> [3] Destroying the stack with Terraform; this takes several minutes
+
+==> [4] Checking that nothing is left
+
+Destroyed. Nothing is left in the stack.

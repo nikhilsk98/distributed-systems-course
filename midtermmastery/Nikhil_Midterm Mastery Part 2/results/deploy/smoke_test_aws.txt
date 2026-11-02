@@ -1,0 +1,77 @@
+$ curl -i http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com/health
+HTTP/1.1 200 OK
+Date: Mon, 02 Nov 2026 07:52:37 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 15
+Connection: keep-alive
+
+{"status":"ok"}
+
+$ curl -s -o out_hello.txt -D - "http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com/files?name=hello.txt"
+HTTP/1.1 200 OK
+X-Chunks: 1
+X-Fetch-Ms: 2057
+X-Missing-After-Open: 0
+X-Missing-At-End: 0
+X-Open-Attempts: 1
+X-Retry-Rounds: 0
+X-Rety-Sent: 0
+X-Task: ip-172-31-7-200.ec2.internal
+time_total=2.124598s size=14
+sha256 match: 39f6b786fa28a9c2867fa2d5ae0d4bc50114a739b765f8de6ce41c9d9e8e5503 vs 39f6b786fa28a9c2867fa2d5ae0d4bc50114a739b765f8de6ce41c9d9e8e5503
+
+$ curl -s -o out_f64k.bin -D - "http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com/files?name=f64k.bin"
+HTTP/1.1 504 Gateway Timeout
+X-Chunks: 1024
+X-Fetch-Ms: 16872
+X-Missing-After-Open: 397
+X-Missing-At-End: 197
+X-Open-Attempts: 3
+X-Retry-Rounds: 5
+X-Rety-Sent: 1585
+X-Task: ip-172-31-82-47.ec2.internal
+time_total=16.946864s size=43
+sha256 match: f2e15c53f9829b5f734d3288ccfddcc7a939628ebf957af6e272d4bcff4ed3d2 vs dc8432042ef3458d7007c469343bc483bcdd46340f56ccb6f51283fcfb093176
+
+$ curl -s -o out_f256k.bin -D - "http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com/files?name=f256k.bin"
+HTTP/1.1 504 Gateway Timeout
+X-Chunks: 4096
+X-Fetch-Ms: 22020
+X-Missing-After-Open: 1362
+X-Missing-At-End: 1162
+X-Open-Attempts: 5
+X-Retry-Rounds: 5
+X-Rety-Sent: 6410
+X-Task: ip-172-31-82-47.ec2.internal
+time_total=22.121327s size=43
+sha256 match: f2e15c53f9829b5f734d3288ccfddcc7a939628ebf957af6e272d4bcff4ed3d2 vs 1ee861ff69e5f7d28226968050a8ed09877633586a9be81c1cb8f1cda7a9892e
+
+$ curl -s -o out_f1m.bin -D - "http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com/files?name=f1m.bin"
+HTTP/1.1 504 Gateway Timeout
+X-Chunks: 16384
+X-Fetch-Ms: 19450
+X-Missing-After-Open: 6944
+X-Missing-At-End: 6741
+X-Open-Attempts: 2
+X-Retry-Rounds: 5
+X-Rety-Sent: 34311
+X-Task: ip-172-31-7-200.ec2.internal
+time_total=19.509197s size=43
+sha256 match: f2e15c53f9829b5f734d3288ccfddcc7a939628ebf957af6e272d4bcff4ed3d2 vs 45ee93494e210bbd5f51a061186659827771435ec2f56d7af0f3bc376100fd82
+
+$ curl -s -o out_f4m.bin -D - "http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com/files?name=f4m.bin"
+HTTP/1.1 504 Gateway Timeout
+X-Chunks: 65536
+X-Fetch-Ms: 30548
+X-Missing-After-Open: 27511
+X-Missing-At-End: 27298
+X-Open-Attempts: 1
+X-Retry-Rounds: 5
+X-Rety-Sent: 137127
+X-Task: ip-172-31-82-47.ec2.internal
+time_total=30.637226s size=43
+sha256 match: f2e15c53f9829b5f734d3288ccfddcc7a939628ebf957af6e272d4bcff4ed3d2 vs 4a39e1016bf981f257158b10df7833f3c4fa15d53bff58ece6153ab3befa7086
+
+$ curl -i "http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com/files?name=nope.txt"
+HTTP/1.1 404 Not Found
+{"error":"file not found"}

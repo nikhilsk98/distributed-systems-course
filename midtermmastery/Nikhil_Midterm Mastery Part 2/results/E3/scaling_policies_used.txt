@@ -1,0 +1,3 @@
+backend-cpu	60.0	60	60
+gateway-requests-per-target	100.0	60	60
+CS6650L2-cpu-target	70.0	300	300

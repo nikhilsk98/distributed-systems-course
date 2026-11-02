@@ -1,0 +1,15 @@
+{
+  "experiment": "E1",
+  "cell": "loss10_f64k.bin",
+  "trial": 2,
+  "loss": 10,
+  "start_utc": "2026-11-02T09:11:14Z",
+  "end_utc": "2026-11-02T09:12:21Z",
+  "users": 2,
+  "run_time_s": 60,
+  "file": "f64k.bin",
+  "extra_query": "",
+  "shape": null,
+  "locust_rc": 1,
+  "cmd": "locust -f /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/scripts/locustfile.py --headless --host http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com --csv /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/results/E1/loss10_f64k/trial2/locust --csv-full-history --html /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/results/E1/loss10_f64k/trial2/report.html --only-summary --loglevel WARNING -u 2 -r 2 -t 60s --stop-timeout 60"
+}

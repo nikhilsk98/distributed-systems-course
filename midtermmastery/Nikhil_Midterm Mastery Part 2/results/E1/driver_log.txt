@@ -1,0 +1,71 @@
+[03:12:37] backend: env already {'SEND_LOSS': '0', 'RECV_LOSS': '0'}
+[03:12:38] backend: stable after 1s
+[03:12:38] locust -> E1/loss00_f4k/trial1 users=2 t=60s file=f4k.bin q='' shape=None
+[03:13:40] locust -> E1/loss00_f16k/trial1 users=2 t=60s file=f16k.bin q='' shape=None
+[03:14:43] locust -> E1/loss00_f64k/trial1 users=2 t=60s file=f64k.bin q='' shape=None
+[03:15:43] locust -> E1/loss00_f1m/trial1 users=2 t=60s file=f1m.bin q='' shape=None
+[03:16:59] locust -> E1/loss00_f4k/trial2 users=2 t=60s file=f4k.bin q='' shape=None
+[03:18:01] locust -> E1/loss00_f16k/trial2 users=2 t=60s file=f16k.bin q='' shape=None
+[03:19:04] locust -> E1/loss00_f64k/trial2 users=2 t=60s file=f64k.bin q='' shape=None
+[03:20:11] locust -> E1/loss00_f1m/trial2 users=2 t=60s file=f1m.bin q='' shape=None
+[03:21:28] locust -> E1/loss00_f4k/trial3 users=2 t=60s file=f4k.bin q='' shape=None
+[03:22:30] locust -> E1/loss00_f16k/trial3 users=2 t=60s file=f16k.bin q='' shape=None
+[03:23:32] locust -> E1/loss00_f64k/trial3 users=2 t=60s file=f64k.bin q='' shape=None
+[03:24:41] locust -> E1/loss00_f1m/trial3 users=2 t=60s file=f1m.bin q='' shape=None
+[03:25:59] backend: rolling to file-transfer-backend:2 with {'SEND_LOSS': '1', 'RECV_LOSS': '1'} cpu=256 mem=512
+[03:29:56] backend: stable after 237s
+[03:29:56] locust -> E1/loss01_f4k/trial1 users=2 t=60s file=f4k.bin q='' shape=None
+[03:30:58] locust -> E1/loss01_f16k/trial1 users=2 t=60s file=f16k.bin q='' shape=None
+[03:32:02] locust -> E1/loss01_f64k/trial1 users=2 t=60s file=f64k.bin q='' shape=None
+[03:33:05] locust -> E1/loss01_f1m/trial1 users=2 t=60s file=f1m.bin q='' shape=None
+[03:34:21] locust -> E1/loss01_f4k/trial2 users=2 t=60s file=f4k.bin q='' shape=None
+[03:35:24] locust -> E1/loss01_f16k/trial2 users=2 t=60s file=f16k.bin q='' shape=None
+[03:36:26] locust -> E1/loss01_f64k/trial2 users=2 t=60s file=f64k.bin q='' shape=None
+[03:37:29] locust -> E1/loss01_f1m/trial2 users=2 t=60s file=f1m.bin q='' shape=None
+[03:38:47] locust -> E1/loss01_f4k/trial3 users=2 t=60s file=f4k.bin q='' shape=None
+[03:39:50] locust -> E1/loss01_f16k/trial3 users=2 t=60s file=f16k.bin q='' shape=None
+[03:40:52] locust -> E1/loss01_f64k/trial3 users=2 t=60s file=f64k.bin q='' shape=None
+[03:41:57] locust -> E1/loss01_f1m/trial3 users=2 t=60s file=f1m.bin q='' shape=None
+[03:43:16] backend: rolling to file-transfer-backend:3 with {'SEND_LOSS': '5', 'RECV_LOSS': '5'} cpu=256 mem=512
+[03:46:48] backend: stable after 212s
+[03:46:48] locust -> E1/loss05_f4k/trial1 users=2 t=60s file=f4k.bin q='' shape=None
+[03:47:52] locust -> E1/loss05_f16k/trial1 users=2 t=60s file=f16k.bin q='' shape=None
+[03:48:57] locust -> E1/loss05_f64k/trial1 users=2 t=60s file=f64k.bin q='' shape=None
+[03:50:06] locust -> E1/loss05_f1m/trial1 users=2 t=60s file=f1m.bin q='' shape=None
+[03:51:23] locust -> E1/loss05_f4k/trial2 users=2 t=60s file=f4k.bin q='' shape=None
+[03:52:29] locust -> E1/loss05_f16k/trial2 users=2 t=60s file=f16k.bin q='' shape=None
+[03:53:33] locust -> E1/loss05_f64k/trial2 users=2 t=60s file=f64k.bin q='' shape=None
+[03:54:39] locust -> E1/loss05_f1m/trial2 users=2 t=60s file=f1m.bin q='' shape=None
+[03:55:56] locust -> E1/loss05_f4k/trial3 users=2 t=60s file=f4k.bin q='' shape=None
+[03:57:01] locust -> E1/loss05_f16k/trial3 users=2 t=60s file=f16k.bin q='' shape=None
+[03:58:09] locust -> E1/loss05_f64k/trial3 users=2 t=60s file=f64k.bin q='' shape=None
+[03:59:17] locust -> E1/loss05_f1m/trial3 users=2 t=60s file=f1m.bin q='' shape=None
+[04:00:38] backend: rolling to file-transfer-backend:4 with {'SEND_LOSS': '10', 'RECV_LOSS': '10'} cpu=256 mem=512
+[04:04:25] backend: stable after 227s
+[04:04:25] locust -> E1/loss10_f4k/trial1 users=2 t=60s file=f4k.bin q='' shape=None
+[04:05:29] locust -> E1/loss10_f16k/trial1 users=2 t=60s file=f16k.bin q='' shape=None
+[04:06:30] locust -> E1/loss10_f64k/trial1 users=2 t=60s file=f64k.bin q='' shape=None
+[04:07:40] locust -> E1/loss10_f1m/trial1 users=2 t=60s file=f1m.bin q='' shape=None
+[04:09:00] locust -> E1/loss10_f4k/trial2 users=2 t=60s file=f4k.bin q='' shape=None
+[04:10:05] locust -> E1/loss10_f16k/trial2 users=2 t=60s file=f16k.bin q='' shape=None
+[04:11:14] locust -> E1/loss10_f64k/trial2 users=2 t=60s file=f64k.bin q='' shape=None
+[04:12:21] locust -> E1/loss10_f1m/trial2 users=2 t=60s file=f1m.bin q='' shape=None
+[04:13:37] locust -> E1/loss10_f4k/trial3 users=2 t=60s file=f4k.bin q='' shape=None
+[04:14:38] locust -> E1/loss10_f16k/trial3 users=2 t=60s file=f16k.bin q='' shape=None
+[04:15:49] locust -> E1/loss10_f64k/trial3 users=2 t=60s file=f64k.bin q='' shape=None
+[04:16:58] locust -> E1/loss10_f1m/trial3 users=2 t=60s file=f1m.bin q='' shape=None
+[04:18:17] backend: rolling to file-transfer-backend:5 with {'SEND_LOSS': '20', 'RECV_LOSS': '20'} cpu=256 mem=512
+[04:21:49] backend: stable after 212s
+[04:21:49] locust -> E1/loss20_f4k/trial1 users=2 t=60s file=f4k.bin q='' shape=None
+[04:22:54] locust -> E1/loss20_f16k/trial1 users=2 t=60s file=f16k.bin q='' shape=None
+[04:23:57] locust -> E1/loss20_f64k/trial1 users=2 t=60s file=f64k.bin q='' shape=None
+[04:25:07] locust -> E1/loss20_f1m/trial1 users=2 t=60s file=f1m.bin q='' shape=None
+[04:26:10] locust -> E1/loss20_f4k/trial2 users=2 t=60s file=f4k.bin q='' shape=None
+[04:27:21] locust -> E1/loss20_f16k/trial2 users=2 t=60s file=f16k.bin q='' shape=None
+[04:28:28] locust -> E1/loss20_f64k/trial2 users=2 t=60s file=f64k.bin q='' shape=None
+[04:29:36] locust -> E1/loss20_f1m/trial2 users=2 t=60s file=f1m.bin q='' shape=None
+[04:30:54] locust -> E1/loss20_f4k/trial3 users=2 t=60s file=f4k.bin q='' shape=None
+[04:32:00] locust -> E1/loss20_f16k/trial3 users=2 t=60s file=f16k.bin q='' shape=None
+[04:33:02] locust -> E1/loss20_f64k/trial3 users=2 t=60s file=f64k.bin q='' shape=None
+[04:34:10] locust -> E1/loss20_f1m/trial3 users=2 t=60s file=f1m.bin q='' shape=None
+[04:35:28] E1 complete

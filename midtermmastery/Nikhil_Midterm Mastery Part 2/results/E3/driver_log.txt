@@ -1,0 +1,10 @@
+[05:33:23] backend: rolling to file-transfer-backend:7 with {'SEND_LOSS': '1', 'RECV_LOSS': '1'} cpu=256 mem=512
+[05:37:06] backend: stable after 222s
+[05:37:06] gateway: env already {'MAX_INFLIGHT': '4'}
+[05:37:07] gateway: stable after 1s
+[05:37:08] gateway: stable after 1s
+[05:37:09] backend: stable after 1s
+[05:37:09] settling 60 s before load
+[05:38:09] locust -> E3/configA users=0 t=0s file=f4k.bin q='' shape=steps:4@180,8@180,16@180,32@180,64@180,4@240
+[05:57:15] load done; observing 120 s more
+[05:59:15] E3 complete

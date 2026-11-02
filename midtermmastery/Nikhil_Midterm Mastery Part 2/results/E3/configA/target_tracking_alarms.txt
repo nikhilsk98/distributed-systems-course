@@ -1,0 +1,4 @@
+TargetTracking-service/file-transfer/backend-AlarmHigh-542284b1-88ad-4bec-ab80-50847f61482a	OK	60.0	3	None	CPUUtilization
+TargetTracking-service/file-transfer/backend-AlarmLow-0ca47d19-c099-4e73-9be0-ca1f8dea8dd2	ALARM	54.0	15	None	CPUUtilization
+TargetTracking-service/file-transfer/gateway-AlarmHigh-b652615f-a35c-42c7-8925-8d878babb089	OK	100.0	3	None	RequestCountPerTarget
+TargetTracking-service/file-transfer/gateway-AlarmLow-82415131-f215-4944-a199-c1cf36d4ad5e	OK	90.0	15	None	RequestCountPerTarget

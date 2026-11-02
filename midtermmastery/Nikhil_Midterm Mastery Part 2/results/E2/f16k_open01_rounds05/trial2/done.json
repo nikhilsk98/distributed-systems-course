@@ -1,0 +1,17 @@
+{
+  "experiment": "E2",
+  "cell": "f16k_open01_rounds05",
+  "trial": 2,
+  "loss": 5,
+  "open_attempts": 1,
+  "retry_rounds": 5,
+  "start_utc": "2026-11-02T10:09:06Z",
+  "end_utc": "2026-11-02T10:10:12Z",
+  "users": 2,
+  "run_time_s": 60,
+  "file": "f16k.bin",
+  "extra_query": "open_attempts=1&retry_rounds=5",
+  "shape": null,
+  "locust_rc": 0,
+  "cmd": "locust -f /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/scripts/locustfile.py --headless --host http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com --csv /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/results/E2/f16k_open01_rounds05/trial2/locust --csv-full-history --html /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/results/E2/f16k_open01_rounds05/trial2/report.html --only-summary --loglevel WARNING -u 2 -r 2 -t 60s --stop-timeout 60"
+}

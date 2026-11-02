@@ -1,0 +1,7 @@
+alb_dns_name = "file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com"
+backend_nlb_dns_name = "file-transfer-backend-b54e4a5fb8749b68.elb.us-east-1.amazonaws.com"
+ecr_backend_url = "719602427292.dkr.ecr.us-east-1.amazonaws.com/file-transfer-backend"
+ecr_gateway_url = "719602427292.dkr.ecr.us-east-1.amazonaws.com/file-transfer-gateway"
+ecs_cluster_name = "file-transfer"
+files_bucket = "file-transfer-719602427292-nsk"
+files_prefix = "tmp/"

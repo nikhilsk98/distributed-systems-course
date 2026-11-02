@@ -1,0 +1,11 @@
+{
+  "start_utc": "2026-11-02T10:38:09Z",
+  "end_utc": "2026-11-02T10:57:15Z",
+  "users": 0,
+  "run_time_s": 0,
+  "file": "f4k.bin",
+  "extra_query": "",
+  "shape": "steps:4@180,8@180,16@180,32@180,64@180,4@240",
+  "locust_rc": 1,
+  "cmd": "locust -f /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/scripts/locustfile.py --headless --host http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com --csv /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/results/E3/configA/locust --csv-full-history --html /Users/nikhil/Documents/Northeastern/Sem 3/distributed-systems-course/midtermmastery/Nikhil_Midterm Mastery Part 2/results/E3/configA/report.html --only-summary --loglevel WARNING --stop-timeout 60"
+}

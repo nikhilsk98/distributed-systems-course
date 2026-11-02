@@ -1,0 +1,39 @@
+$ aws s3 rb s3://file-transfer-719602427292-nsk --force
+remove_bucket: file-transfer-719602427292-nsk
+
+$ delete Container Insights / leftover log groups
+deleting /aws/ecs/containerinsights/file-transfer/performance
+
+$ deregister + delete task definitions (file-transfer-*)
+
+$ aws resourcegroupstaggingapi get-resources --tag-filters Key=Project,Values=cs6650-midterm
+arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-backend:2	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-gateway:4	arn:aws:ecs:us-east-1:719602427292:cluster/file-transfer	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-gateway:2	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-backend:6	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-backend:5	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-gateway:3	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-backend:4	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-backend:3	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-gateway:5	arn:aws:ecs:us-east-1:719602427292:service/file-transfer/backend	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-backend:7	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-gateway:1	arn:aws:ecs:us-east-1:719602427292:service/file-transfer/gateway	arn:aws:ecs:us-east-1:719602427292:task-definition/file-transfer-backend:1
+
+$ name-based checks
+ECS clusters:
+arn:aws:ecs:us-east-1:719602427292:cluster/default	arn:aws:ecs:us-east-1:719602427292:cluster/CS6650L2-cluster
+load balancers:
+CS6650L2-alb
+target groups (file-transfer):
+ECR repos:
+ecr_service
+security groups (file-transfer):
+S3 buckets (file-transfer):
+scalable targets:
+service/CS6650L2-cluster/CS6650L2
+log groups (file-transfer):
+terraform state:
+       0
+
+$ task definition status check
+ACTIVE: 0
+INACTIVE: 0
+DELETE_IN_PROGRESS: 0
+
+CONCLUSION (2026-11-02 ~11:15Z):
+- Nothing billable from this project remains:
+  - Terraform state is empty.
+  - No file-transfer load balancers, target groups, security groups, ECR repos, log groups, scalable targets or S3 bucket.
+  - No task definitions in any state.
+- The tag search still returns the file-transfer cluster, services and task definitions. That is the Resource Groups Tagging API's known lag after deletion: `ecs list-clusters` and `list-task-definitions` confirm they are gone.
+- NOT from this project (pre-existing in the account, left untouched): CS6650L2-alb, CS6650L2-cluster with scalable target service/CS6650L2-cluster/CS6650L2, ECR repo ecr_service, and the default cluster.

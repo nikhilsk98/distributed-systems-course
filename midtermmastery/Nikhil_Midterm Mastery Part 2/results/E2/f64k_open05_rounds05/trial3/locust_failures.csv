@@ -1,0 +1,2 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+GET,GET f64k.bin,CatchResponseError('HTTP 504'),2,2026-11-02T10:26:59Z,2026-11-02T10:27:23Z

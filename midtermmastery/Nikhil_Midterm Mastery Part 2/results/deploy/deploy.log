@@ -1,0 +1,247 @@
+
+==> [1] Building (scripts/build.sh --skip-tests)
+
+==> [1] Checking Go formatting and vet
+
+==> [2] Building the Go programs into bin/
+bin/transfer-server
+bin/transfer-client
+bin/transfer-frontend
+
+==> [3] Go tests skipped (--skip-tests)
+
+==> [4] Checking the Terraform files
+[32m[1mSuccess![0m The configuration is valid.
+[0m
+
+==> [5] Building the Docker images (linux/amd64)
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 730B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for gcr.io/distroless/static-debian12:nonroot
+#2 ...
+
+#3 [internal] load metadata for docker.io/library/golang:1.27
+#3 DONE 1.0s
+
+#2 [internal] load metadata for gcr.io/distroless/static-debian12:nonroot
+#2 DONE 1.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 72B done
+#4 DONE 0.0s
+
+#5 [build 1/6] FROM docker.io/library/golang:1.27@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b
+#5 resolve docker.io/library/golang:1.27@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b done
+#5 DONE 0.1s
+
+#6 [stage-1 1/2] FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
+#6 resolve gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab done
+#6 sha256:96ed2737ae312e0bc637b40783f7c2f23416cb72ca957aa01855f1614278e64b 0B / 143.35kB 0.2s
+#6 sha256:dcaa5a89b0ccda4b283e16d0b4d0891cd93d5fe05c6798f7806781a6a2d84354 314B / 314B 0.2s done
+#6 sha256:b839dfae01f66e15c6a8b63520557ed315bdfe036342fa7a0c537259f10d7a9a 351B / 351B 0.2s done
+#6 sha256:dd64bf2dd177757451a98fcdc999a339c35dee5d9872d8f4dc69c8f3c4dd0112 80B / 80B 0.2s done
+#6 ...
+
+#7 [internal] load build context
+#7 transferring context: 77.04MB 0.5s done
+#7 DONE 0.5s
+
+#6 [stage-1 1/2] FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
+#6 sha256:52630fc75a18675c530ed9eba5f55eca09b03e91bd5bc15307918bbc1a7e7296 0B / 162B 0.2s
+#6 sha256:96ed2737ae312e0bc637b40783f7c2f23416cb72ca957aa01855f1614278e64b 143.35kB / 143.35kB 0.5s done
+#6 sha256:52630fc75a18675c530ed9eba5f55eca09b03e91bd5bc15307918bbc1a7e7296 162B / 162B 0.2s done
+#6 sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4 123B / 123B 0.2s done
+#6 sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212 0B / 188B 0.3s
+#6 sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212 188B / 188B 0.4s done
+#6 sha256:2780920e5dbfbe103d03a583ed75345306e572ec5a48cb10361f046767d9f29a 67B / 67B 0.2s done
+#6 sha256:bf7a4185f01524837d19abde915ffde84e64368b250f5b5e9f6f75aea62a11d4 0B / 29.00kB 0.2s
+#6 sha256:39dc083afc39bd8dc43d456fe7ff7d39292e593bb2769972c11bb2e5f9119386 0B / 445.71kB 0.2s
+#6 sha256:990a9c434e5e0f11549a8d4a41a1991e621b04e30cd63269adbc97b1dc38fd7e 0B / 12.48kB 0.2s
+#6 sha256:a5789fc40e828c4e7467626e3f69ec5dea8e5da22fe660db8ae6d16f777b0bbf 0B / 83.90kB 0.2s
+#6 sha256:bf7a4185f01524837d19abde915ffde84e64368b250f5b5e9f6f75aea62a11d4 29.00kB / 29.00kB 0.4s done
+#6 sha256:990a9c434e5e0f11549a8d4a41a1991e621b04e30cd63269adbc97b1dc38fd7e 12.48kB / 12.48kB 0.2s done
+#6 sha256:39dc083afc39bd8dc43d456fe7ff7d39292e593bb2769972c11bb2e5f9119386 445.71kB / 445.71kB 0.6s done
+#6 sha256:a5789fc40e828c4e7467626e3f69ec5dea8e5da22fe660db8ae6d16f777b0bbf 83.90kB / 83.90kB 0.4s done
+#6 extracting sha256:a5789fc40e828c4e7467626e3f69ec5dea8e5da22fe660db8ae6d16f777b0bbf 0.0s done
+#6 extracting sha256:990a9c434e5e0f11549a8d4a41a1991e621b04e30cd63269adbc97b1dc38fd7e done
+#6 extracting sha256:39dc083afc39bd8dc43d456fe7ff7d39292e593bb2769972c11bb2e5f9119386
+#6 extracting sha256:39dc083afc39bd8dc43d456fe7ff7d39292e593bb2769972c11bb2e5f9119386 0.0s done
+#6 extracting sha256:bf7a4185f01524837d19abde915ffde84e64368b250f5b5e9f6f75aea62a11d4 done
+#6 extracting sha256:2780920e5dbfbe103d03a583ed75345306e572ec5a48cb10361f046767d9f29a done
+#6 extracting sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212 done
+#6 extracting sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4 done
+#6 extracting sha256:52630fc75a18675c530ed9eba5f55eca09b03e91bd5bc15307918bbc1a7e7296 done
+#6 extracting sha256:dd64bf2dd177757451a98fcdc999a339c35dee5d9872d8f4dc69c8f3c4dd0112 done
+#6 extracting sha256:b839dfae01f66e15c6a8b63520557ed315bdfe036342fa7a0c537259f10d7a9a done
+#6 extracting sha256:dcaa5a89b0ccda4b283e16d0b4d0891cd93d5fe05c6798f7806781a6a2d84354 done
+#6 extracting sha256:96ed2737ae312e0bc637b40783f7c2f23416cb72ca957aa01855f1614278e64b done
+#6 DONE 1.4s
+
+#5 [build 1/6] FROM docker.io/library/golang:1.27@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b
+#5 sha256:5b534a18e2e5f6b1357329d379c890936bcac773dd508384ca3cd87c03f1750c 127B / 127B 0.1s done
+#5 sha256:82e0bb27ae78502103ed383ed33346f88a83943fb7bd93977850d5890ee8fb3b 71.15MB / 71.15MB 1.1s done
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 29.36MB / 102.45MB 1.4s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 6.29MB / 67.82MB 1.2s
+#5 sha256:7fac3b752bd4f060dcf33c0f54d1fad29fce8ff42b8fb544f9ec95372f0933bf 25.63MB / 25.63MB 1.0s done
+#5 sha256:a1d156b0aab5fb07d822a7f4681f6d3ed1689073531c34f5668818c233633f11 8.39MB / 49.41MB 0.2s
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 34.60MB / 102.45MB 1.5s
+#5 sha256:a1d156b0aab5fb07d822a7f4681f6d3ed1689073531c34f5668818c233633f11 24.12MB / 49.41MB 0.3s
+#5 sha256:a1d156b0aab5fb07d822a7f4681f6d3ed1689073531c34f5668818c233633f11 49.41MB / 49.41MB 0.6s done
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 45.09MB / 102.45MB 1.8s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 11.53MB / 67.82MB 1.7s
+#5 extracting sha256:a1d156b0aab5fb07d822a7f4681f6d3ed1689073531c34f5668818c233633f11
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 51.38MB / 102.45MB 2.0s
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 57.67MB / 102.45MB 2.1s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 15.73MB / 67.82MB 2.0s
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 65.01MB / 102.45MB 2.3s
+#5 extracting sha256:a1d156b0aab5fb07d822a7f4681f6d3ed1689073531c34f5668818c233633f11 0.5s done
+#5 extracting sha256:7fac3b752bd4f060dcf33c0f54d1fad29fce8ff42b8fb544f9ec95372f0933bf
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 20.97MB / 67.82MB 2.3s
+#5 extracting sha256:7fac3b752bd4f060dcf33c0f54d1fad29fce8ff42b8fb544f9ec95372f0933bf 0.2s done
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 84.93MB / 102.45MB 2.6s
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 96.47MB / 102.45MB 2.7s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 27.26MB / 67.82MB 2.6s
+#5 sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 102.45MB / 102.45MB 3.0s done
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 31.46MB / 67.82MB 2.9s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 38.80MB / 67.82MB 3.2s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 42.99MB / 67.82MB 3.3s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 48.23MB / 67.82MB 3.5s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 55.57MB / 67.82MB 3.6s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 63.96MB / 67.82MB 3.8s
+#5 sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 67.82MB / 67.82MB 3.8s done
+#5 extracting sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c
+#5 extracting sha256:c0168c6e6744fc499abc90618818f9e4aaf652a587fb6345b3882dc57de1495c 0.7s done
+#5 DONE 4.6s
+
+#5 [build 1/6] FROM docker.io/library/golang:1.27@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b
+#5 extracting sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f
+#5 extracting sha256:b3560024de9caf4f31eb81decf4a997d9ca03b1ac0657e866593c4b17aac565f 1.0s done
+#5 DONE 5.6s
+
+#5 [build 1/6] FROM docker.io/library/golang:1.27@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b
+#5 extracting sha256:82e0bb27ae78502103ed383ed33346f88a83943fb7bd93977850d5890ee8fb3b
+#5 extracting sha256:82e0bb27ae78502103ed383ed33346f88a83943fb7bd93977850d5890ee8fb3b 1.2s done
+#5 DONE 6.9s
+
+#5 [build 1/6] FROM docker.io/library/golang:1.27@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b
+#5 extracting sha256:5b534a18e2e5f6b1357329d379c890936bcac773dd508384ca3cd87c03f1750c done
+#5 extracting sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 done
+#5 DONE 6.9s
+
+#8 [build 2/6] WORKDIR /src
+#8 DONE 0.3s
+
+#9 [build 3/6] COPY go.mod go.sum ./
+#9 DONE 0.0s
+
+#10 [build 4/6] RUN go mod download
+#10 DONE 3.4s
+
+#11 [build 5/6] COPY . .
+#11 DONE 0.1s
+
+#12 [build 6/6] RUN CGO_ENABLED=0 GOOS=linux go build -o /transfer-server ./transfer-server
+#12 DONE 32.1s
+
+#13 [stage-1 2/2] COPY --from=build /transfer-server /transfer-server
+#13 DONE 0.0s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 0.3s done
+#14 exporting manifest sha256:b33de35ceb709d693eeadb01b9ab241ff352ef0fd3e3762368a37915b69c6b3f done
+#14 exporting config sha256:3e984ab52c8f616c6fc313ccb7b7190ccf4ccdf387e4f6775101455ac84fe195 done
+#14 exporting attestation manifest sha256:a9dbfa9e446913617445b57cafa63e059f04ab849bb92e53f08f9a8b80d0ddbd done
+#14 exporting manifest list sha256:102fc4d4ed19920fba31b91eb88d9e15d1e7fd8a324dc369e3c9bcaf171bb2f0 done
+#14 naming to docker.io/library/file-transfer-backend:latest done
+#14 DONE 0.3s
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 651B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for gcr.io/distroless/static-debian12:nonroot
+#2 ...
+
+#3 [internal] load metadata for docker.io/library/golang:1.27
+#3 DONE 0.3s
+
+#2 [internal] load metadata for gcr.io/distroless/static-debian12:nonroot
+#2 DONE 0.3s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 72B done
+#4 DONE 0.0s
+
+#5 [build 1/6] FROM docker.io/library/golang:1.27@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b
+#5 resolve docker.io/library/golang:1.27@sha256:2920bb124f1a2e12a1d39f0cab756ae0068441ee1da7655dec7f5e374944095b done
+#5 DONE 0.0s
+
+#6 [stage-1 1/2] FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
+#6 resolve gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab done
+#6 CACHED
+
+#7 [internal] load build context
+#7 transferring context: 2.86kB done
+#7 DONE 0.0s
+
+#8 [build 4/6] RUN go mod download
+#8 CACHED
+
+#9 [build 2/6] WORKDIR /src
+#9 CACHED
+
+#10 [build 3/6] COPY go.mod go.sum ./
+#10 CACHED
+
+#11 [build 5/6] COPY . .
+#11 CACHED
+
+#12 [build 6/6] RUN CGO_ENABLED=0 GOOS=linux go build -o /transfer-frontend ./transfer-frontend
+#12 DONE 33.9s
+
+#13 [stage-1 2/2] COPY --from=build /transfer-frontend /transfer-frontend
+#13 DONE 0.0s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 0.4s done
+#14 exporting manifest sha256:79bed789b27fd56c5396c00c768abbc149d3c2e2a63263d1dcaa79eb6673f30f done
+#14 exporting config sha256:948f92a04efc3a09e3325890a60d7d5b9e073fbfa4185ccef3eecd80d854eec6 done
+#14 exporting attestation manifest sha256:b17b42d8f055b4460ec3f8afb7896592b652bfa609569c89b6f0f8206dd41b20 done
+#14 exporting manifest list sha256:4d4bf8df1252fc4d094d36ee3be01620a7e905b2e3271f4eac0ef8e7ce651837 done
+#14 naming to docker.io/library/file-transfer-gateway:latest done
+#14 DONE 0.4s
+
+Build finished.
+  programs: bin/transfer-server bin/transfer-client bin/transfer-frontend
+  images:   file-transfer-backend:latest file-transfer-gateway:latest
+
+==> [2] Creating the image repositories
+
+==> [3] Pushing the images as 20261102024531 and latest
+pushed 719602427292.dkr.ecr.us-east-1.amazonaws.com/file-transfer-backend:20261102024531
+pushed 719602427292.dkr.ecr.us-east-1.amazonaws.com/file-transfer-gateway:20261102024531
+
+==> [4] Creating the stack with Terraform (load balancers, services, scalers); this takes several minutes
+
+==> [5] Waiting for the services to settle
+
+==> [6] Waiting for the gateway to answer and every target to be healthy
+
+Deployed.
+  gateway:  http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com
+  bucket:   s3://file-transfer-719602427292-nsk/tmp/
+  cluster:  file-transfer (region us-east-1)
+  images:   tag 20261102024531
+
+Next steps:
+  upload a file:   aws s3 cp ./my-file.txt s3://file-transfer-719602427292-nsk/tmp/my-file.txt
+  fetch it:        curl -o out.txt "http://file-transfer-gateway-1390231424.us-east-1.elb.amazonaws.com/files?name=my-file.txt"
+  run your own experiments
+  tear it down:    scripts/destroy.sh --yes

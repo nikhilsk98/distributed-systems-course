@@ -1,0 +1,51 @@
+[04:35:35] backend: rolling to file-transfer-backend:6 with {'SEND_LOSS': '5', 'RECV_LOSS': '5'} cpu=256 mem=512
+[04:39:17] backend: stable after 221s
+[04:39:17] locust -> E2/f16k_open05_rounds01/trial1 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=1' shape=None
+[04:40:20] locust -> E2/f16k_open05_rounds02/trial1 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=2' shape=None
+[04:41:20] locust -> E2/f16k_open05_rounds03/trial1 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=3' shape=None
+[04:42:27] locust -> E2/f16k_open05_rounds05/trial1 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=5' shape=None
+[04:43:35] locust -> E2/f16k_open05_rounds10/trial1 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=10' shape=None
+[04:44:38] locust -> E2/f16k_open05_rounds20/trial1 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=20' shape=None
+[04:45:42] locust -> E2/f64k_open05_rounds01/trial1 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=1' shape=None
+[04:46:46] locust -> E2/f64k_open05_rounds02/trial1 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=2' shape=None
+[04:47:50] locust -> E2/f64k_open05_rounds03/trial1 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=3' shape=None
+[04:48:58] locust -> E2/f64k_open05_rounds05/trial1 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=5' shape=None
+[04:50:05] locust -> E2/f64k_open05_rounds10/trial1 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=10' shape=None
+[04:51:24] locust -> E2/f64k_open05_rounds20/trial1 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=20' shape=None
+[04:52:50] locust -> E2/f16k_open01_rounds05/trial1 users=2 t=60s file=f16k.bin q='open_attempts=1&retry_rounds=5' shape=None
+[04:53:53] locust -> E2/f16k_open02_rounds05/trial1 users=2 t=60s file=f16k.bin q='open_attempts=2&retry_rounds=5' shape=None
+[04:54:57] locust -> E2/f16k_open10_rounds05/trial1 users=2 t=60s file=f16k.bin q='open_attempts=10&retry_rounds=5' shape=None
+[04:55:58] locust -> E2/f16k_open05_rounds01/trial2 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=1' shape=None
+[04:57:01] locust -> E2/f16k_open05_rounds02/trial2 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=2' shape=None
+[04:58:07] locust -> E2/f16k_open05_rounds03/trial2 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=3' shape=None
+[04:59:12] locust -> E2/f16k_open05_rounds05/trial2 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=5' shape=None
+[05:00:15] locust -> E2/f16k_open05_rounds10/trial2 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=10' shape=None
+[05:01:22] locust -> E2/f16k_open05_rounds20/trial2 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=20' shape=None
+[05:02:28] locust -> E2/f64k_open05_rounds01/trial2 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=1' shape=None
+[05:03:30] locust -> E2/f64k_open05_rounds02/trial2 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=2' shape=None
+[05:04:37] locust -> E2/f64k_open05_rounds03/trial2 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=3' shape=None
+[05:05:44] locust -> E2/f64k_open05_rounds05/trial2 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=5' shape=None
+[05:06:51] locust -> E2/f64k_open05_rounds10/trial2 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=10' shape=None
+[05:07:53] locust -> E2/f64k_open05_rounds20/trial2 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=20' shape=None
+[05:09:06] locust -> E2/f16k_open01_rounds05/trial2 users=2 t=60s file=f16k.bin q='open_attempts=1&retry_rounds=5' shape=None
+[05:10:12] locust -> E2/f16k_open02_rounds05/trial2 users=2 t=60s file=f16k.bin q='open_attempts=2&retry_rounds=5' shape=None
+[05:11:19] locust -> E2/f16k_open10_rounds05/trial2 users=2 t=60s file=f16k.bin q='open_attempts=10&retry_rounds=5' shape=None
+[05:12:24] locust -> E2/f16k_open05_rounds01/trial3 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=1' shape=None
+[05:13:27] locust -> E2/f16k_open05_rounds02/trial3 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=2' shape=None
+[05:14:32] locust -> E2/f16k_open05_rounds03/trial3 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=3' shape=None
+[05:15:38] locust -> E2/f16k_open05_rounds05/trial3 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=5' shape=None
+[05:16:44] locust -> E2/f16k_open05_rounds10/trial3 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=10' shape=None
+[05:17:49] locust -> E2/f16k_open05_rounds20/trial3 users=2 t=60s file=f16k.bin q='open_attempts=5&retry_rounds=20' shape=None
+[05:18:53] locust -> E2/f64k_open05_rounds01/trial3 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=1' shape=None
+[05:19:57] locust -> E2/f64k_open05_rounds02/trial3 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=2' shape=None
+[05:21:02] locust -> E2/f64k_open05_rounds03/trial3 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=3' shape=None
+[05:22:08] locust -> E2/f64k_open05_rounds05/trial3 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=5' shape=None
+[05:22:35] backend: env already {'SEND_LOSS': '5', 'RECV_LOSS': '5'}
+[05:26:27] backend: stable after 232s
+[05:26:27] locust -> E2/f64k_open05_rounds05/trial3 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=5' shape=None
+[05:27:38] locust -> E2/f64k_open05_rounds10/trial3 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=10' shape=None
+[05:28:39] locust -> E2/f64k_open05_rounds20/trial3 users=2 t=60s file=f64k.bin q='open_attempts=5&retry_rounds=20' shape=None
+[05:29:58] locust -> E2/f16k_open01_rounds05/trial3 users=2 t=60s file=f16k.bin q='open_attempts=1&retry_rounds=5' shape=None
+[05:31:03] locust -> E2/f16k_open02_rounds05/trial3 users=2 t=60s file=f16k.bin q='open_attempts=2&retry_rounds=5' shape=None
+[05:32:08] locust -> E2/f16k_open10_rounds05/trial3 users=2 t=60s file=f16k.bin q='open_attempts=10&retry_rounds=5' shape=None
+[05:33:13] E2 complete

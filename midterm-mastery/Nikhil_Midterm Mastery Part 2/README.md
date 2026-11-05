@@ -44,6 +44,7 @@ CS6650 Fall 2026. Three experiments on the course's **file-transfer play-service
 | [`notes/checkpoint-log.md`](notes/checkpoint-log.md) | Checkpoint plans and cost/time estimates (autonomous mode), plus the re-scope after the smoke test |
 | [`notes/native-loss-diagnosis.md`](notes/native-loss-diagnosis.md) | The unplanned finding and how it was narrowed down |
 | [`service-changes.md`](service-changes.md) | Every edit to the fork (instrumentation, Terraform) and every runtime config change, with reasons and effects on measurement; includes the one incident |
+| [`service-code/`](service-code/) | My service changes as one patch (`service-changes.patch`, `git diff main..midterm-instrumentation`), with apply instructions and a per-file change table |
 | [`experiments/E1.md`](experiments/E1.md), [`E2.md`](experiments/E2.md), [`E3.md`](experiments/E3.md) | Hypothesis, variables, method, results with figures, observations tied to code, threats to validity |
 | [`scripts/`](scripts/) | Locust file, one driver per experiment, CloudWatch fetcher, analysis/figures, screenshot tools, slide builder. See [`scripts/README.md`](scripts/README.md) to re-run |
 | [`results/`](results/) | Raw data: per-run Locust CSVs and HTML reports (gzipped as `report.html.gz` to keep the repo small; `gunzip` to view), `requests.jsonl` (one line per request with stats headers), `meta.json` with UTC start/end, CloudWatch CSVs, summaries; `run_ledger.csv` (every run's window); `run_incidents.txt`; `deploy/` (deploy log, smoke tests, diagnostics, teardown) |

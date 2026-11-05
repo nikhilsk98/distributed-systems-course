@@ -1,0 +1,1015 @@
+diff --git a/metrics/metrics.go b/metrics/metrics.go
+new file mode 100644
+index 0000000..3ee3a6e
+--- /dev/null
++++ b/metrics/metrics.go
+@@ -0,0 +1,158 @@
++// Package metrics holds small process-wide counters and gauges, and periodically prints them
++// as one JSON line in CloudWatch Embedded Metric Format (EMF). ECS ships stdout to CloudWatch
++// Logs with the awslogs driver, and CloudWatch Logs turns EMF lines into custom metrics
++// (namespace FileTransfer) without an agent or extra IAM permissions.
++//
++// Added for the CS6650 midterm experiments: the service otherwise has no way to show retries,
++// overload drops or in-flight counts, and the NLB exposes no per-request metric.
++package metrics
++
++import (
++	"encoding/json"
++	"fmt"
++	"os"
++	"sort"
++	"sync"
++	"sync/atomic"
++	"time"
++)
++
++// Namespace is the CloudWatch namespace the EMF metrics land in.
++const Namespace = "FileTransfer"
++
++// Counter is a monotonically increasing count; each report prints the change since the last.
++type Counter struct {
++	value atomic.Int64
++	last  int64
++}
++
++// Add increases the counter by n.
++func (c *Counter) Add(n int64) { c.value.Add(n) }
++
++// Inc increases the counter by one.
++func (c *Counter) Inc() { c.value.Add(1) }
++
++// Total returns the value since the process started.
++func (c *Counter) Total() int64 { return c.value.Load() }
++
++// Gauge is a current level (for example requests in flight). Each report prints the highest
++// value seen during the interval, so short spikes between reports are not lost.
++type Gauge struct {
++	value atomic.Int64
++	max   atomic.Int64
++}
++
++// Add changes the gauge by n (use -1 to decrement) and records a new interval maximum.
++func (g *Gauge) Add(n int64) {
++	v := g.value.Add(n)
++	for {
++		m := g.max.Load()
++		if v <= m || g.max.CompareAndSwap(m, v) {
++			return
++		}
++	}
++}
++
++// Value returns the current level.
++func (g *Gauge) Value() int64 { return g.value.Load() }
++
++// Registry is a named set of counters and gauges for one service.
++type Registry struct {
++	mu       sync.Mutex
++	service  string
++	counters map[string]*Counter
++	gauges   map[string]*Gauge
++}
++
++// NewRegistry creates an empty registry; service becomes the EMF "Service" dimension.
++func NewRegistry(service string) *Registry {
++	return &Registry{service: service, counters: map[string]*Counter{}, gauges: map[string]*Gauge{}}
++}
++
++// Counter returns the counter called name, creating it on first use.
++func (r *Registry) Counter(name string) *Counter {
++	r.mu.Lock()
++	defer r.mu.Unlock()
++	if c, ok := r.counters[name]; ok {
++		return c
++	}
++	c := &Counter{}
++	r.counters[name] = c
++	return c
++}
++
++// Gauge returns the gauge called name, creating it on first use.
++func (r *Registry) Gauge(name string) *Gauge {
++	r.mu.Lock()
++	defer r.mu.Unlock()
++	if g, ok := r.gauges[name]; ok {
++		return g
++	}
++	g := &Gauge{}
++	r.gauges[name] = g
++	return g
++}
++
++// Snapshot builds one EMF document with the counter deltas and gauge maxima since the last
++// snapshot, and resets the interval maxima.
++func (r *Registry) Snapshot(now time.Time) map[string]any {
++	r.mu.Lock()
++	defer r.mu.Unlock()
++	doc := map[string]any{"Service": r.service, "TaskHost": hostname()}
++	var defs []map[string]string
++	names := make([]string, 0, len(r.counters)+len(r.gauges))
++	for name := range r.counters {
++		names = append(names, name)
++	}
++	for name := range r.gauges {
++		names = append(names, name)
++	}
++	sort.Strings(names)
++	for _, name := range names {
++		if c, ok := r.counters[name]; ok {
++			v := c.value.Load()
++			doc[name] = v - c.last
++			c.last = v
++			defs = append(defs, map[string]string{"Name": name, "Unit": "Count"})
++		} else {
++			g := r.gauges[name]
++			cur := g.value.Load()
++			doc[name] = g.max.Swap(cur) // report the interval max, start the next interval at the current level
++			defs = append(defs, map[string]string{"Name": name, "Unit": "Count"})
++		}
++	}
++	doc["_aws"] = map[string]any{
++		"Timestamp": now.UnixMilli(),
++		"CloudWatchMetrics": []map[string]any{{
++			"Namespace":  Namespace,
++			"Dimensions": [][]string{{"Service"}},
++			"Metrics":    defs,
++		}},
++	}
++	return doc
++}
++
++// Start prints a snapshot to stdout every interval until the process exits.
++func (r *Registry) Start(interval time.Duration) {
++	go func() {
++		ticker := time.NewTicker(interval)
++		defer ticker.Stop()
++		for now := range ticker.C {
++			line, err := json.Marshal(r.Snapshot(now))
++			if err == nil {
++				fmt.Println(string(line))
++			}
++		}
++	}()
++}
++
++func hostname() string {
++	h, _ := os.Hostname()
++	return h
++}
++
++// Quiet reports whether per-datagram debug logging is turned off (env QUIET=1). The counters
++// above replace those lines, which would otherwise write one log line per lost datagram.
++func Quiet() bool {
++	return os.Getenv("QUIET") == "1" || os.Getenv("QUIET") == "true"
++}
+diff --git a/scripts/common.sh b/scripts/common.sh
+index d32a534..eba3905 100644
+--- a/scripts/common.sh
++++ b/scripts/common.sh
+@@ -2,7 +2,7 @@
+ 
+ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+ TF_DIR=$ROOT/terraform
+-export AWS_REGION=${AWS_REGION:-us-west-2}
++export AWS_REGION=${AWS_REGION:-us-east-1}
+ export AWS_DEFAULT_REGION=$AWS_REGION
+ 
+ # These names are fixed in the Terraform files.
+diff --git a/terraform/alb.tf b/terraform/alb.tf
+index d271c40..d5b1f9b 100644
+--- a/terraform/alb.tf
++++ b/terraform/alb.tf
+@@ -12,7 +12,7 @@ resource "aws_lb_target_group" "gateway" {
+   protocol             = "HTTP"
+   target_type          = "ip" # Fargate tasks register by IP address
+   vpc_id               = data.aws_vpc.default.id
+-  deregistration_delay = 60 # at least the gateway's 5s drain plus a typical transfer
++  deregistration_delay = var.deregistration_delay # at least the gateway's 5s drain plus a typical transfer
+ 
+   health_check {
+     path                = "/health" # 200 while serving, 503 once the task is draining
+diff --git a/terraform/autoscaling.tf b/terraform/autoscaling.tf
+index ec6f315..a8b5256 100644
+--- a/terraform/autoscaling.tf
++++ b/terraform/autoscaling.tf
+@@ -16,8 +16,8 @@ resource "aws_appautoscaling_policy" "gateway" {
+ 
+   target_tracking_scaling_policy_configuration {
+     target_value       = var.gateway_requests_per_target
+-    scale_out_cooldown = 60
+-    scale_in_cooldown  = 120
++    scale_out_cooldown = var.scale_out_cooldown
++    scale_in_cooldown  = var.scale_in_cooldown
+ 
+     predefined_metric_specification {
+       predefined_metric_type = "ALBRequestCountPerTarget"
+@@ -44,8 +44,8 @@ resource "aws_appautoscaling_policy" "backend" {
+ 
+   target_tracking_scaling_policy_configuration {
+     target_value       = var.backend_cpu_target
+-    scale_out_cooldown = 60
+-    scale_in_cooldown  = 120
++    scale_out_cooldown = var.scale_out_cooldown
++    scale_in_cooldown  = var.scale_in_cooldown
+ 
+     predefined_metric_specification {
+       predefined_metric_type = "ECSServiceAverageCPUUtilization"
+diff --git a/terraform/ecs.tf b/terraform/ecs.tf
+index f24ce2b..67bf98c 100644
+--- a/terraform/ecs.tf
++++ b/terraform/ecs.tf
+@@ -5,6 +5,12 @@ data "aws_iam_role" "lab" {
+ 
+ resource "aws_ecs_cluster" "main" {
+   name = "file-transfer"
++
++  # Midterm: Container Insights publishes RunningTaskCount / DesiredTaskCount per service
++  setting {
++    name  = "containerInsights"
++    value = "enabled"
++  }
+ }
+ 
+ resource "aws_cloudwatch_log_group" "gateway" {
+@@ -49,13 +55,14 @@ resource "aws_ecs_task_definition" "backend" {
+       { name = "WORKERS", value = tostring(var.backend_workers) },
+       { name = "SEND_LOSS", value = tostring(var.backend_send_loss) },
+       { name = "RECV_LOSS", value = tostring(var.backend_recv_loss) },
+-      { name = "AWS_REGION", value = "us-west-2" },
++      { name = "QUIET", value = var.quiet_logs ? "1" : "0" },
++      { name = "AWS_REGION", value = var.region },
+     ]
+     logConfiguration = {
+       logDriver = "awslogs"
+       options = {
+         awslogs-group         = aws_cloudwatch_log_group.backend.name
+-        awslogs-region        = "us-west-2"
++        awslogs-region        = var.region
+         awslogs-stream-prefix = "backend"
+       }
+     }
+@@ -89,12 +96,18 @@ resource "aws_ecs_task_definition" "gateway" {
+       { name = "TRANSPORT", value = "udp" },
+       { name = "UPSTREAM", value = "${aws_lb.backend.dns_name}:8080" },
+       { name = "MAX_INFLIGHT", value = tostring(var.max_inflight) },
++      { name = "QUEUE_WAIT", value = tostring(var.gateway_queue_wait) },
++      { name = "OPEN_ATTEMPTS", value = tostring(var.open_attempts) },
++      { name = "RETRY_ROUNDS", value = tostring(var.retry_rounds) },
++      { name = "READ_TIMEOUT_MS", value = tostring(var.read_timeout_ms) },
++      { name = "ALLOW_BUDGET_OVERRIDE", value = var.allow_budget_override ? "1" : "0" },
++      { name = "QUIET", value = var.quiet_logs ? "1" : "0" },
+     ]
+     logConfiguration = {
+       logDriver = "awslogs"
+       options = {
+         awslogs-group         = aws_cloudwatch_log_group.gateway.name
+-        awslogs-region        = "us-west-2"
++        awslogs-region        = var.region
+         awslogs-stream-prefix = "gateway"
+       }
+     }
+diff --git a/terraform/main.tf b/terraform/main.tf
+index 5c3518b..03bc9d4 100644
+--- a/terraform/main.tf
++++ b/terraform/main.tf
+@@ -19,7 +19,14 @@ terraform {
+ 
+ # The provider of your cloud service, in this case it is AWS.
+ provider "aws" {
+-  region = "us-west-2" # Which region you are working on
++  region = var.region # Which region you are working on (midterm: us-east-1)
++
++  # Midterm: tag everything this stack creates so leftovers can be found by tag
++  default_tags {
++    tags = {
++      Project = "cs6650-midterm"
++    }
++  }
+ }
+ 
+ # Existing bucket the server fetches requested files from. LabRole cannot manage buckets, so
+diff --git a/terraform/nlb.tf b/terraform/nlb.tf
+index 4cc480d..4aec8a3 100644
+--- a/terraform/nlb.tf
++++ b/terraform/nlb.tf
+@@ -14,7 +14,7 @@ resource "aws_lb_target_group" "backend" {
+   protocol             = "UDP"
+   target_type          = "ip"
+   vpc_id               = data.aws_vpc.default.id
+-  deregistration_delay = 60
++  deregistration_delay = var.deregistration_delay
+   preserve_client_ip   = "true"
+ 
+   # A UDP target group cannot health-check UDP, so it asks the server's TCP health port
+diff --git a/terraform/variables.tf b/terraform/variables.tf
+index 8b477c3..dd1af58 100644
+--- a/terraform/variables.tf
++++ b/terraform/variables.tf
+@@ -96,3 +96,65 @@ variable "backend_recv_loss" {
+     error_message = "backend_recv_loss must be from 0 to 100."
+   }
+ }
++
++# ---- Added for the CS6650 midterm experiments ----
++
++variable "region" {
++  type        = string
++  description = "AWS region for the whole stack"
++  default     = "us-east-1"
++}
++
++variable "quiet_logs" {
++  type        = bool
++  description = "QUIET=1: drop per-datagram DEBUG lines (counters are printed as EMF every 10s instead)"
++  default     = true
++}
++
++variable "open_attempts" {
++  type        = number
++  description = "OPEN attempts per transfer in the gateway's client (OPEN_ATTEMPTS)"
++  default     = 5
++}
++
++variable "retry_rounds" {
++  type        = number
++  description = "RETY rounds per transfer in the gateway's client (RETRY_ROUNDS)"
++  default     = 5
++}
++
++variable "read_timeout_ms" {
++  type        = number
++  description = "How long the client waits for a quiet server before ending a round (READ_TIMEOUT_MS)"
++  default     = 2000
++}
++
++variable "allow_budget_override" {
++  type        = bool
++  description = "Let a request override the retry budget with query parameters (ALLOW_BUDGET_OVERRIDE)"
++  default     = true
++}
++
++variable "gateway_queue_wait" {
++  type        = number
++  description = "Seconds a request waits for a gateway in-flight slot before 503 (QUEUE_WAIT)"
++  default     = 5
++}
++
++variable "scale_out_cooldown" {
++  type        = number
++  description = "Target tracking scale-out cooldown in seconds (both services)"
++  default     = 60
++}
++
++variable "scale_in_cooldown" {
++  type        = number
++  description = "Target tracking scale-in cooldown in seconds (both services)"
++  default     = 120
++}
++
++variable "deregistration_delay" {
++  type        = number
++  description = "Seconds a load balancer waits for a removed target to finish (both LBs)"
++  default     = 60
++}
+diff --git a/transfer-client/udp/udp-client.go b/transfer-client/udp/udp-client.go
+index 16fe4aa..72c178d 100644
+--- a/transfer-client/udp/udp-client.go
++++ b/transfer-client/udp/udp-client.go
+@@ -12,9 +12,13 @@ import (
+ 	"strings"
+ 	"time"
+ 
++	"example.com/go-file-transfer/metrics"
+ 	transferdata "example.com/go-file-transfer/transfer-data"
+ )
+ 
++// quiet shortens the per-round "Missing chunks" log line (env QUIET=1).
++var quiet = metrics.Quiet()
++
+ // How long the server may stay quiet before the client decides it is done sending,
+ // how many rounds of RETY requests the client makes before giving up, and the largest
+ // NUM_CHUNKS a datagram may announce (65536 chunks of 64 bytes is 4 MiB). The cap stops a
+@@ -22,15 +26,68 @@ import (
+ // maxOpenAttempts is how many times OPEN is sent, on a fresh socket each time, when nothing
+ // comes back. With 2s timeouts, 5 OPEN attempts plus 5 retry rounds wait at most about 20s,
+ // well inside a load balancer's 60s idle timeout.
+-const (
+-	maxRetryRounds  = 5
+-	maxOpenAttempts = 5
+-	maxChunks       = 65536
++//
++// Midterm instrumentation: maxRetryRounds, maxOpenAttempts and readTimeout used to be
++// constants. They now default to the same values (5, 5, 2s) but can be set with the
++// environment variables RETRY_ROUNDS, OPEN_ATTEMPTS and READ_TIMEOUT_MS, and a single call
++// can override them with FetchWithStats.
++const maxChunks = 65536
++
++var (
++	maxRetryRounds  = envInt("RETRY_ROUNDS", 5)
++	maxOpenAttempts = envInt("OPEN_ATTEMPTS", 5)
++	// readTimeout is how long the server may stay quiet.
++	readTimeout = time.Duration(envInt("READ_TIMEOUT_MS", 2000)) * time.Millisecond
+ )
+ 
+-// readTimeout is how long the server may stay quiet. It is a variable only so tests can
+-// shorten it.
+-var readTimeout = 2 * time.Second
++// envInt reads a positive integer from the environment, or returns fallback.
++func envInt(name string, fallback int) int {
++	value, err := strconv.Atoi(os.Getenv(name))
++	if err != nil || value < 1 {
++		return fallback
++	}
++	return value
++}
++
++// Budget is how hard one Fetch tries before giving up. Zero fields mean "use the default".
++type Budget struct {
++	OpenAttempts int
++	RetryRounds  int
++	ReadTimeout  time.Duration
++}
++
++// DefaultBudget returns the process-wide budget (from the environment or the built-in defaults).
++func DefaultBudget() Budget {
++	return Budget{OpenAttempts: maxOpenAttempts, RetryRounds: maxRetryRounds, ReadTimeout: readTimeout}
++}
++
++func (b Budget) withDefaults() Budget {
++	d := DefaultBudget()
++	if b.OpenAttempts < 1 {
++		b.OpenAttempts = d.OpenAttempts
++	}
++	if b.RetryRounds < 0 {
++		b.RetryRounds = d.RetryRounds
++	}
++	if b.ReadTimeout <= 0 {
++		b.ReadTimeout = d.ReadTimeout
++	}
++	return b
++}
++
++// Stats describes what one Fetch did. It is filled in even when Fetch fails.
++type Stats struct {
++	OpenAttempts       int // OPEN messages sent (one per fresh socket)
++	RetryRounds        int // rounds of RETY requests sent
++	RetyRequests       int // RETY datagrams sent in total
++	Redials            int // new sockets opened after a silent retry round
++	Chunks             int // NUM_CHUNKS announced by the server (0 if nothing arrived)
++	DatagramsReceived  int // valid file datagrams received, duplicates included
++	DuplicateDatagrams int // datagrams for a chunk that was already received
++	MissingAfterOpen   int // chunks still missing after the OPEN phase
++	MissingAtEnd       int // chunks still missing when Fetch returned
++	Budget             Budget
++}
+ 
+ // ServerError is returned when the server answers a request with "ERR <message>".
+ // Message holds the text after "ERR " (for example "file-not-found").
+@@ -111,6 +168,20 @@ func RunClient(args []string) {
+ // Side effects: opens and closes a UDP socket, writes OPEN and RETY datagrams, sets read
+ // deadlines on that socket, and logs progress to stderr.
+ func Fetch(address string, filename string) ([]byte, error) {
++	data, _, err := FetchWithStats(address, filename, Budget{RetryRounds: -1})
++	return data, err
++}
++
++// FetchWithStats is Fetch with a per-call retry budget (zero/negative fields use the
++// defaults; RetryRounds 0 means "no RETY rounds") and returns what the call did.
++func FetchWithStats(address string, filename string, budget Budget) ([]byte, Stats, error) {
++	budget = budget.withDefaults()
++	stats := Stats{Budget: budget}
++	data, err := fetch(address, filename, budget, &stats)
++	return data, stats, err
++}
++
++func fetch(address string, filename string, budget Budget, stats *Stats) ([]byte, error) {
+ 	var conn *net.UDPConn
+ 	defer func() {
+ 		if conn != nil {
+@@ -120,8 +191,9 @@ func Fetch(address string, filename string) ([]byte, error) {
+ 
+ 	chunks := make(map[int]transferdata.TCP_Pack)
+ 	num_chunks := 0
+-	for attempt := 0; attempt < maxOpenAttempts && num_chunks == 0; attempt++ {
++	for attempt := 0; attempt < budget.OpenAttempts && num_chunks == 0; attempt++ {
+ 		var err error
++		stats.OpenAttempts++
+ 		conn, err = redial(conn, address)
+ 		if err != nil {
+ 			return nil, err
+@@ -130,17 +202,20 @@ func Fetch(address string, filename string) ([]byte, error) {
+ 		if err != nil {
+ 			return nil, fmt.Errorf("sending OPEN: %w", err)
+ 		}
+-		num_chunks, err = readChunks(conn, chunks)
++		num_chunks, err = readChunks(conn, chunks, budget.ReadTimeout, stats)
+ 		if err != nil {
+ 			return nil, err
+ 		}
+ 	}
++	stats.Chunks = num_chunks
+ 	if num_chunks == 0 {
+ 		return nil, ErrNoData
+ 	}
++	stats.MissingAfterOpen = len(missingChunkIds(chunks, num_chunks))
++	stats.MissingAtEnd = stats.MissingAfterOpen
+ 
+ 	silent := false
+-	for round := 0; round < maxRetryRounds; round++ {
++	for round := 0; round < budget.RetryRounds; round++ {
+ 		missing := missingChunkIds(chunks, num_chunks)
+ 		if len(missing) == 0 {
+ 			break
+@@ -148,20 +223,29 @@ func Fetch(address string, filename string) ([]byte, error) {
+ 		if silent {
+ 			// The last round brought nothing back: that server may be gone or the flow dead.
+ 			var err error
++			stats.Redials++
+ 			conn, err = redial(conn, address)
+ 			if err != nil {
+ 				return nil, err
+ 			}
+ 		}
+-		fmt.Fprintf(os.Stderr, "Missing chunks %v, retrying\n", missing)
++		stats.RetryRounds++
++		if quiet {
++			// The full list can hold thousands of IDs per round; log only the count.
++			fmt.Fprintf(os.Stderr, "Missing %d of %d chunks, retry round %d\n", len(missing), num_chunks, round+1)
++		} else {
++			fmt.Fprintf(os.Stderr, "Missing chunks %v, retrying\n", missing)
++		}
+ 		for _, id := range missing {
++			stats.RetyRequests++
+ 			_, err := fmt.Fprintf(conn, "RETY %v %v", filename, id)
+ 			if err != nil {
+ 				return nil, fmt.Errorf("sending RETY: %w", err)
+ 			}
+ 		}
+ 		before := len(chunks)
+-		_, err := readChunks(conn, chunks)
++		_, err := readChunks(conn, chunks, budget.ReadTimeout, stats)
++		stats.MissingAtEnd = len(missingChunkIds(chunks, num_chunks))
+ 		if err != nil {
+ 			return nil, err
+ 		}
+@@ -169,7 +253,11 @@ func Fetch(address string, filename string) ([]byte, error) {
+ 	}
+ 
+ 	missing := missingChunkIds(chunks, num_chunks)
++	stats.MissingAtEnd = len(missing)
+ 	if len(missing) > 0 {
++		if quiet && len(missing) > 10 {
++			return nil, fmt.Errorf("%w: %d chunks, first %v", ErrIncomplete, len(missing), missing[:10])
++		}
+ 		return nil, fmt.Errorf("%w: %v", ErrIncomplete, missing)
+ 	}
+ 
+@@ -234,10 +322,10 @@ func redial(old *net.UDPConn, address string) (*net.UDPConn, error) {
+ // returns a nil error. Malformed datagrams are logged and skipped.
+ // Side effects: sets a read deadline on conn before every read, mutates chunks, and logs
+ // skipped datagrams to stderr.
+-func readChunks(conn *net.UDPConn, chunks map[int]transferdata.TCP_Pack) (int, error) {
++func readChunks(conn *net.UDPConn, chunks map[int]transferdata.TCP_Pack, timeout time.Duration, stats *Stats) (int, error) {
+ 	num_chunks := 0
+ 	for {
+-		conn.SetReadDeadline(time.Now().Add(readTimeout))
++		conn.SetReadDeadline(time.Now().Add(timeout))
+ 		buf := [1024]byte{}
+ 		n_bytes, _, err := conn.ReadFromUDP(buf[:])
+ 		if err != nil {
+@@ -257,6 +345,10 @@ func readChunks(conn *net.UDPConn, chunks map[int]transferdata.TCP_Pack) (int, e
+ 			fmt.Fprintf(os.Stderr, "Ignoring bad datagram: %v\n", err)
+ 			continue
+ 		}
++		if _, seen := chunks[id]; seen {
++			stats.DuplicateDatagrams++
++		}
++		stats.DatagramsReceived++
+ 		chunks[id] = pack
+ 		num_chunks = total
+ 	}
+diff --git a/transfer-frontend/gateway/gateway.go b/transfer-frontend/gateway/gateway.go
+index a1b2b92..44ab5bd 100644
+--- a/transfer-frontend/gateway/gateway.go
++++ b/transfer-frontend/gateway/gateway.go
+@@ -4,9 +4,12 @@
+ package gateway
+ 
+ import (
++	"encoding/json"
+ 	"errors"
++	"fmt"
+ 	"mime"
+ 	"net/http"
++	"os"
+ 	"path/filepath"
+ 	"strconv"
+ 	"sync/atomic"
+@@ -15,6 +18,7 @@ import (
+ 
+ 	"github.com/gin-gonic/gin"
+ 
++	"example.com/go-file-transfer/metrics"
+ 	"example.com/go-file-transfer/transfer-client/tcp"
+ 	"example.com/go-file-transfer/transfer-client/udp"
+ )
+@@ -30,6 +34,34 @@ const DefaultQueueWait = 5 * time.Second
+ // tests pass a fake so the handler can be tested without a network.
+ type Fetcher func(address string, filename string) ([]byte, error)
+ 
++// InstrumentedFetcher is a Fetcher that takes a per-request retry budget and reports what it
++// did (midterm instrumentation). udp.FetchWithStats is one.
++type InstrumentedFetcher func(address string, filename string, budget udp.Budget) ([]byte, udp.Stats, error)
++
++// plain adapts a Fetcher that has no budget or stats (tcp.Fetch, test fakes).
++func plain(fetch Fetcher) InstrumentedFetcher {
++	return func(address string, filename string, budget udp.Budget) ([]byte, udp.Stats, error) {
++		data, err := fetch(address, filename)
++		return data, udp.Stats{Budget: budget}, err
++	}
++}
++
++// Metrics are the gateway's process-wide counters, printed every 10s as CloudWatch EMF by main.
++var Metrics = metrics.NewRegistry("gateway")
++
++var (
++	mRequests   = Metrics.Counter("Requests")
++	mOK         = Metrics.Counter("Responses200")
++	mBusy503    = Metrics.Counter("RejectedBusy503")
++	mTimeout504 = Metrics.Counter("Timeout504")
++	mOther      = Metrics.Counter("OtherErrors")
++	mRety       = Metrics.Counter("RetyRequestsSent")
++	mRounds     = Metrics.Counter("RetryRounds")
++	mOpens      = Metrics.Counter("OpenAttempts")
++	mInflight   = Metrics.Gauge("InFlight")
++	mWaiting    = Metrics.Gauge("WaitingForSlot")
++)
++
+ // Gateway is the HTTP frontend: a Gin engine plus the state a graceful shutdown needs.
+ type Gateway struct {
+ 	// Router serves GET /files?name=<filename> and GET /health.
+@@ -76,6 +108,13 @@ func (gateway *Gateway) WaitIdle(timeout time.Duration) bool {
+ // with no capacity would block every request forever.
+ // Side effects: none until the returned router serves requests.
+ func New(upstream string, fetch Fetcher, maxInFlight int, queueWait time.Duration) *Gateway {
++	return NewInstrumented(upstream, plain(fetch), maxInFlight, queueWait, false)
++}
++
++// NewInstrumented is New with a fetcher that reports stats. When allowOverride is true the
++// query parameters open_attempts, retry_rounds and read_timeout_ms override the retry budget
++// for that one request (an experiment hook so the budget can be swept without redeploying).
++func NewInstrumented(upstream string, fetch InstrumentedFetcher, maxInFlight int, queueWait time.Duration, allowOverride bool) *Gateway {
+ 	// inflight is a counting semaphore: it lets at most cap(inflight) transfers run at once.
+ 	//
+ 	// If you know sync.Mutex: a Mutex is a semaphore with exactly one permit. Lock takes the
+@@ -105,7 +144,7 @@ func New(upstream string, fetch Fetcher, maxInFlight int, queueWait time.Duratio
+ 	router := gin.New()
+ 	// A load balancer polls /health every few seconds, so keep it out of the request log.
+ 	router.Use(gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/health"}}), gin.Recovery())
+-	router.GET("/files", handleGetFile(upstream, fetch, inflight, queueWait))
++	router.GET("/files", handleGetFile(upstream, fetch, inflight, queueWait, allowOverride))
+ 	router.GET("/health", gateway.handleHealthCheck())
+ 	gateway.Router = router
+ 	return gateway
+@@ -136,7 +175,7 @@ func (gateway *Gateway) handleHealthCheck() gin.HandlerFunc {
+ // within queueWait it replies 503 with a Retry-After header, also without calling fetch.
+ // Side effects: each request waits for a semaphore permit, then opens a UDP socket to the
+ // upstream and exchanges datagrams with it (inside fetch).
+-func handleGetFile(upstream string, fetch Fetcher, inflight chan struct{}, queueWait time.Duration) gin.HandlerFunc {
++func handleGetFile(upstream string, fetch InstrumentedFetcher, inflight chan struct{}, queueWait time.Duration, allowOverride bool) gin.HandlerFunc {
+ 	return func(c *gin.Context) {
+ 		name := c.Query("name")
+ 		err := validateName(name)
+@@ -144,29 +183,59 @@ func handleGetFile(upstream string, fetch Fetcher, inflight chan struct{}, queue
+ 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+ 			return
+ 		}
++		mRequests.Inc()
++		budget := udp.Budget{RetryRounds: -1} // -1: use the process default
++		if allowOverride {
++			budget = budgetFromQuery(c, budget)
++		}
+ 
+ 		// Acquire a permit, or give up if the client leaves or the wait runs out.
++		arrived := time.Now()
++		mWaiting.Add(1)
+ 		timer := time.NewTimer(queueWait)
+ 		defer timer.Stop()
+ 		select {
+ 		case inflight <- struct{}{}:
+-			defer func() { <-inflight }() // release the permit when this request ends
++			mWaiting.Add(-1)
++			mInflight.Add(1)
++			defer func() { <-inflight; mInflight.Add(-1) }() // release the permit when this request ends
+ 		case <-c.Request.Context().Done():
++			mWaiting.Add(-1)
+ 			c.AbortWithStatus(http.StatusServiceUnavailable)
+ 			return
+ 		case <-timer.C:
++			mWaiting.Add(-1)
++			mBusy503.Inc()
++			c.Header("X-Queue-Wait-Ms", strconv.FormatInt(time.Since(arrived).Milliseconds(), 10))
++			c.Header("X-Task", taskHost)
+ 			c.Header("Retry-After", strconv.Itoa(1))
+ 			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "the gateway is busy, try again"})
++			logFetch(name, http.StatusServiceUnavailable, time.Since(arrived), 0, udp.Stats{Budget: budget}, "busy")
+ 			return
+ 		}
++		queued := time.Since(arrived)
+ 
+-		file_data, err := fetch(upstream, name)
++		started := time.Now()
++		file_data, stats, err := fetch(upstream, name, budget)
++		fetchTime := time.Since(started)
++		setStatsHeaders(c, stats, queued, fetchTime)
++		mOpens.Add(int64(stats.OpenAttempts))
++		mRounds.Add(int64(stats.RetryRounds))
++		mRety.Add(int64(stats.RetyRequests))
+ 		if err != nil {
+ 			c.Error(err)
+ 			status, message := statusFor(err)
++			if status == http.StatusGatewayTimeout {
++				mTimeout504.Inc()
++			} else {
++				mOther.Inc()
++			}
+ 			c.JSON(status, gin.H{"error": message})
++			logFetch(name, status, queued, fetchTime, stats, errKind(err))
+ 			return
+ 		}
++		mOK.Inc()
++		logFetch(name, http.StatusOK, queued, fetchTime, stats, "")
+ 
+ 		content_type := mime.TypeByExtension(filepath.Ext(name))
+ 		if content_type == "" {
+@@ -249,3 +318,67 @@ func statusFor(err error) (int, string) {
+ 	}
+ 	return http.StatusGatewayTimeout, "the file server did not respond"
+ }
++
++// taskHost identifies the gateway task in headers and logs.
++var taskHost, _ = os.Hostname()
++
++// budgetFromQuery applies the open_attempts, retry_rounds and read_timeout_ms query parameters.
++func budgetFromQuery(c *gin.Context, budget udp.Budget) udp.Budget {
++	if v, err := strconv.Atoi(c.Query("open_attempts")); err == nil && v >= 1 && v <= 50 {
++		budget.OpenAttempts = v
++	}
++	if v, err := strconv.Atoi(c.Query("retry_rounds")); err == nil && v >= 0 && v <= 50 {
++		budget.RetryRounds = v
++	}
++	if v, err := strconv.Atoi(c.Query("read_timeout_ms")); err == nil && v >= 50 && v <= 10000 {
++		budget.ReadTimeout = time.Duration(v) * time.Millisecond
++	}
++	return budget
++}
++
++// setStatsHeaders exposes what the transfer did, so a load generator can record retries per request.
++func setStatsHeaders(c *gin.Context, stats udp.Stats, queued time.Duration, fetchTime time.Duration) {
++	h := c.Header
++	h("X-Task", taskHost)
++	h("X-Queue-Wait-Ms", strconv.FormatInt(queued.Milliseconds(), 10))
++	h("X-Fetch-Ms", strconv.FormatInt(fetchTime.Milliseconds(), 10))
++	h("X-Open-Attempts", strconv.Itoa(stats.OpenAttempts))
++	h("X-Retry-Rounds", strconv.Itoa(stats.RetryRounds))
++	h("X-Rety-Sent", strconv.Itoa(stats.RetyRequests))
++	h("X-Redials", strconv.Itoa(stats.Redials))
++	h("X-Chunks", strconv.Itoa(stats.Chunks))
++	h("X-Datagrams-Received", strconv.Itoa(stats.DatagramsReceived))
++	h("X-Duplicate-Datagrams", strconv.Itoa(stats.DuplicateDatagrams))
++	h("X-Missing-After-Open", strconv.Itoa(stats.MissingAfterOpen))
++	h("X-Missing-At-End", strconv.Itoa(stats.MissingAtEnd))
++	h("X-Budget", fmt.Sprintf("%d/%d/%d", stats.Budget.OpenAttempts, stats.Budget.RetryRounds, stats.Budget.ReadTimeout.Milliseconds()))
++}
++
++// errKind names a fetch failure for the log.
++func errKind(err error) string {
++	switch {
++	case errors.Is(err, udp.ErrNoData):
++		return "no-data"
++	case errors.Is(err, udp.ErrIncomplete):
++		return "incomplete"
++	}
++	var se *udp.ServerError
++	if errors.As(err, &se) {
++		return "server-" + se.Message
++	}
++	return "network"
++}
++
++// logFetch prints one JSON line per file request (CloudWatch Logs Insights can query it).
++func logFetch(name string, status int, queued time.Duration, fetchTime time.Duration, stats udp.Stats, failure string) {
++	line, _ := json.Marshal(map[string]any{
++		"evt": "fetch", "ts": time.Now().UTC().Format(time.RFC3339Nano), "task": taskHost,
++		"file": name, "status": status, "queue_ms": queued.Milliseconds(), "fetch_ms": fetchTime.Milliseconds(),
++		"open_attempts": stats.OpenAttempts, "retry_rounds": stats.RetryRounds, "rety_sent": stats.RetyRequests,
++		"redials": stats.Redials, "chunks": stats.Chunks, "datagrams_rx": stats.DatagramsReceived,
++		"dup_rx": stats.DuplicateDatagrams, "missing_after_open": stats.MissingAfterOpen,
++		"missing_at_end": stats.MissingAtEnd, "failure": failure,
++		"budget_open": stats.Budget.OpenAttempts, "budget_rounds": stats.Budget.RetryRounds,
++	})
++	fmt.Println(string(line))
++}
+diff --git a/transfer-frontend/main.go b/transfer-frontend/main.go
+index a848bb5..d7a7494 100644
+--- a/transfer-frontend/main.go
++++ b/transfer-frontend/main.go
+@@ -77,7 +77,20 @@ func main() {
+ 	}
+ 
+ 	fmt.Printf("Serving http://%v/files, fetching over %v from %v (up to %v at once)\n", listen, transport, upstream, maxInFlight)
+-	frontend := gateway.New(upstream, fetch, maxInFlight, queueWait)
++	// Midterm instrumentation: the UDP fetcher reports per-request stats, and with
++	// ALLOW_BUDGET_OVERRIDE=1 a request may set its own retry budget via query parameters.
++	allowOverride := os.Getenv("ALLOW_BUDGET_OVERRIDE") == "1"
++	instrumented := gateway.InstrumentedFetcher(udp.FetchWithStats)
++	if transport != "udp" {
++		instrumented = func(address string, filename string, budget udp.Budget) ([]byte, udp.Stats, error) {
++			data, err := fetch(address, filename)
++			return data, udp.Stats{Budget: budget}, err
++		}
++	}
++	b := udp.DefaultBudget()
++	fmt.Printf("Retry budget: %v OPEN attempts, %v RETY rounds, %v read timeout (per-request override: %v)\n", b.OpenAttempts, b.RetryRounds, b.ReadTimeout, allowOverride)
++	frontend := gateway.NewInstrumented(upstream, instrumented, maxInFlight, queueWait, allowOverride)
++	gateway.Metrics.Start(10 * time.Second)
+ 
+ 	// On SIGTERM (a scale-in or deploy) report unhealthy first so the load balancer stops
+ 	// sending new requests, wait for it to notice, let running downloads finish, then exit.
+diff --git a/transfer-server/protocol/server.go b/transfer-server/protocol/server.go
+index 37e61dd..531daf6 100644
+--- a/transfer-server/protocol/server.go
++++ b/transfer-server/protocol/server.go
+@@ -8,14 +8,51 @@ import (
+ 	"strconv"
+ 	"strings"
+ 	"sync"
++	"time"
+ 
++	"example.com/go-file-transfer/metrics"
+ 	tcpdata "example.com/go-file-transfer/transfer-data"
+ )
+ 
++// Metrics are the backend's process-wide counters (midterm instrumentation), printed every
++// 10s as CloudWatch EMF by the server's RunServer.
++var Metrics = metrics.NewRegistry("backend")
++
++var (
++	mReceived      = Metrics.Counter("MessagesAccepted")
++	mOverload      = Metrics.Counter("OverloadDrops")
++	mOpens         = Metrics.Counter("OpenRequests")
++	mRetys         = Metrics.Counter("RetyRequests")
++	mSourceFetches = Metrics.Counter("SourceFetches")
++	mSourceMs      = Metrics.Counter("SourceFetchMsTotal")
++	mBusy          = Metrics.Gauge("BusyWorkers")
++	mQueue         = Metrics.Gauge("QueuedJobs")
++)
++
++// quiet turns off the per-message DEBUG lines (env QUIET=1); the counters above replace them.
++var quiet = metrics.Quiet()
++
+ func printDebugMessage(message string) {
++	if quiet {
++		return
++	}
+ 	fmt.Fprintf(os.Stderr, "DEBUG: %v\n", message)
+ }
+ 
++// printError always logs, even when quiet.
++func printError(message string) {
++	fmt.Fprintf(os.Stderr, "ERROR: %v\n", message)
++}
++
++// fetchSource times one read of the file from S3 (or disk).
++func fetchSource(source FileSource, name string) ([]byte, error) {
++	started := time.Now()
++	data, err := source.Fetch(name)
++	mSourceFetches.Inc()
++	mSourceMs.Add(time.Since(started).Milliseconds())
++	return data, err
++}
++
+ // FileSource supplies the bytes of a named file. Fetch must be safe for concurrent use.
+ type FileSource interface {
+ 	Fetch(name string) ([]byte, error)
+@@ -59,7 +96,10 @@ func Serve(transport Transport, source FileSource, workers int) {
+ 		go func() {
+ 			defer running.Done()
+ 			for next := range jobs {
++				mQueue.Add(-1)
++				mBusy.Add(1)
+ 				handleCommand(transport, source, next.message, next.from)
++				mBusy.Add(-1)
+ 			}
+ 		}()
+ 	}
+@@ -77,9 +117,13 @@ func Serve(transport Transport, source FileSource, workers int) {
+ 		}
+ 		// A non-blocking send: if the queue is full we drop the message instead of
+ 		// stalling the reader, which would bring back one-request-at-a-time behavior.
++		mQueue.Add(1)
+ 		select {
+ 		case jobs <- job{message: message, from: from}:
++			mReceived.Inc()
+ 		default:
++			mQueue.Add(-1)
++			mOverload.Inc()
+ 			printDebugMessage("Overloaded: dropped incoming datagram")
+ 		}
+ 	}
+@@ -124,10 +168,11 @@ func handleCommand(transport Transport, source FileSource, message string, from
+ // The file is only held in local variables, so it is freed once the send finishes.
+ func handleOpen(transport Transport, source FileSource, to Peer, filename string) {
+ 	printDebugMessage(fmt.Sprintf("Processing OPEN for file: \"%v\"", filename))
++	mOpens.Inc()
+ 
+-	file_data, err := source.Fetch(filename)
++	file_data, err := fetchSource(source, filename)
+ 	if err != nil {
+-		printDebugMessage("Error fetching file: " + err.Error())
++		printError("Error fetching file: " + err.Error())
+ 		sendError(transport, to, "file-not-found")
+ 		return
+ 	}
+@@ -146,10 +191,11 @@ func handleOpen(transport Transport, source FileSource, to Peer, filename string
+ // The file is fetched from source again and dropped after the chunk is sent.
+ func handleRetry(transport Transport, source FileSource, to Peer, filename string, idText string) {
+ 	printDebugMessage(fmt.Sprintf("Processing RETY for file: \"%v\" chunk %v", filename, idText))
++	mRetys.Inc()
+ 
+-	file_data, err := source.Fetch(filename)
++	file_data, err := fetchSource(source, filename)
+ 	if err != nil {
+-		printDebugMessage("Error fetching file: " + err.Error())
++		printError("Error fetching file: " + err.Error())
+ 		sendError(transport, to, "file-not-found")
+ 		return
+ 	}
+diff --git a/transfer-server/udp/udp-server.go b/transfer-server/udp/udp-server.go
+index 119ba91..7af9f96 100644
+--- a/transfer-server/udp/udp-server.go
++++ b/transfer-server/udp/udp-server.go
+@@ -149,6 +149,8 @@ func RunServer(args []string) {
+ 		transport.StopReceiving()
+ 	}()
+ 
++	protocol.Metrics.Start(10 * time.Second)
++	fmt.Printf("{\"evt\":\"config\",\"send_loss\":%d,\"recv_loss\":%d,\"workers\":%d,\"queue\":%d}\n", sendLossPercent, recvLossPercent, workers, workers*4)
+ 	protocol.Serve(transport, source, workers)
+ }
+ 
+diff --git a/transfer-server/udp/udp-transport.go b/transfer-server/udp/udp-transport.go
+index b0c9b7d..5bcccba 100644
+--- a/transfer-server/udp/udp-transport.go
++++ b/transfer-server/udp/udp-transport.go
+@@ -8,10 +8,20 @@ import (
+ 	"sync/atomic"
+ 	"time"
+ 
++	"example.com/go-file-transfer/metrics"
+ 	"example.com/go-file-transfer/transfer-server/loss"
+ 	"example.com/go-file-transfer/transfer-server/protocol"
+ )
+ 
++// Midterm instrumentation: counts of simulated drops and real sends.
++var (
++	mSendDropped = protocol.Metrics.Counter("SimulatedSendDrops")
++	mRecvDropped = protocol.Metrics.Counter("SimulatedRecvDrops")
++	mSent        = protocol.Metrics.Counter("DatagramsSent")
++	mSendErrors  = protocol.Metrics.Counter("SendErrors")
++	quiet        = metrics.Quiet()
++)
++
+ // UDPTransport implements protocol.Transport over a single UDP socket,
+ // one message per datagram. The Peer is the *net.UDPAddr of the sender.
+ // The loss percentages (0-100) simulate an unreliable network: each datagram sent or
+@@ -52,6 +62,10 @@ func (transport *UDPTransport) Receive() (string, protocol.Peer, error) {
+ 			return "", nil, err
+ 		}
+ 		if loss.ShouldDrop(transport.recvLossPercent) {
++			mRecvDropped.Inc()
++			if quiet {
++				continue
++			}
+ 			fmt.Fprintf(os.Stderr, "DEBUG: Simulated loss: dropped incoming datagram (%v bytes)\n", n)
+ 			continue
+ 		}
+@@ -68,9 +82,18 @@ func (transport *UDPTransport) Receive() (string, protocol.Peer, error) {
+ // Side effects: sends a datagram to to, or logs the drop to stderr instead.
+ func (transport *UDPTransport) Send(to protocol.Peer, message []byte) error {
+ 	if loss.ShouldDrop(transport.sendLossPercent) {
++		mSendDropped.Inc()
++		if quiet {
++			return nil
++		}
+ 		fmt.Fprintf(os.Stderr, "DEBUG: Simulated loss: dropped outgoing datagram (%v bytes)\n", len(message))
+ 		return nil
+ 	}
+ 	_, err := transport.conn.WriteTo(message, to)
++	if err != nil {
++		mSendErrors.Inc()
++	} else {
++		mSent.Inc()
++	}
+ 	return err
+ }

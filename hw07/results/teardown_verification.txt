@@ -1,0 +1,30 @@
+== NAT
+== ALB
+CS6650L2-alb
+== TG
+CS6650L2-tg
+== ECS clusters
+CLUSTERARNS	arn:aws:ecs:us-east-1:719602427292:cluster/default
+CLUSTERARNS	arn:aws:ecs:us-east-1:719602427292:cluster/CS6650L2-cluster
+== EIP
+3.214.174.222	eipalloc-09abdb2bd0a00aba4
+54.221.231.60	eipalloc-074707cd3309c7558
+== Lambda
+MainMonitoringFunction	ModLabRole	RedshiftEventSubscription	RoleCreationFunction	RedshiftOverwatch
+== VPC hw07
+== ECR
+ecr_service
+== SNS
+TOPICS	arn:aws:sns:us-east-1:719602427292:RedshiftSNS
+== SQS
+None
+== Log groups
+/aws/lambda/RedshiftEventSubscription	/aws/lambda/RedshiftOverwatch	/aws/lambda/RoleCreationFunction	/ecs/CS6650L2
+== Running ECS-ish ENIs
+interface	
+interface	
+interface	ELB app/CS6650L2-alb/2fcc1c750af65aee
+interface	
+interface	arn:aws:ecs:us-east-1:719602427292:attachment/a082b7be-81c7-4273-a975-cbd735d10717
+interface	ELB app/CS6650L2-alb/2fcc1c750af65aee
+interface	arn:aws:ecs:us-east-1:719602427292:attachment/d8de85b1-2376-43ff-8be7-2367bf9f5637

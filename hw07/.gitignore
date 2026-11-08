@@ -1,0 +1,26 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+
+# Built binaries / artifacts
+lambda/build/
+service/order-api
+processor/order-processor
+lambda/order-lambda
+*.zip
+bootstrap
+
+# Credentials / local env
+.env
+*.pem
+credentials
+.aws/
+
+.DS_Store
+__pycache__/
+
+# Course handout (kept locally, not published)
+ASSIGNMENT.md

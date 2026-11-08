@@ -1,0 +1,8 @@
+alb_arn_suffix = "app/hw07-alb/1c1b837d2f581ed4"
+alb_url = "http://hw07-alb-642147429.us-east-1.elb.amazonaws.com"
+ecr_api_url = "719602427292.dkr.ecr.us-east-1.amazonaws.com/hw07-order-api"
+ecr_processor_url = "719602427292.dkr.ecr.us-east-1.amazonaws.com/hw07-order-processor"
+ecs_cluster = "hw07-cluster"
+lambda_name = "hw07-order-lambda"
+sns_topic_arn = "arn:aws:sns:us-east-1:719602427292:order-processing-events"
+sqs_queue_url = "https://sqs.us-east-1.amazonaws.com/719602427292/order-processing-queue"

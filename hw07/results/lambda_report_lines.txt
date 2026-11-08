@@ -1,0 +1,12 @@
+# REPORT lines from /aws/lambda/hw07-order-lambda (all 7 invocations; stream = execution environment)
+
+## Cold starts (with Init Duration)
+2026-11-08T04:05:53Z  bd8bf430b9244a1287a36d0c8650acb6  REPORT RequestId: 0512a8ce-1556-45da-840b-6f5ff684e430	Duration: 3002.28 ms	Billed Duration: 3075 ms	Memory Size: 512 MB	Max Memory Used: 19 MB	Init Duration: 71.90 ms	
+2026-11-08T04:14:33Z  fb556e08a30f491aa444ac5e8dcc67b0  REPORT RequestId: 246d9b0f-d703-4135-a34a-c4e94b550309	Duration: 3002.58 ms	Billed Duration: 3075 ms	Memory Size: 512 MB	Max Memory Used: 19 MB	Init Duration: 71.50 ms	
+
+## Warm starts (no Init Duration)
+2026-11-08T04:05:58Z  bd8bf430b9244a1287a36d0c8650acb6  REPORT RequestId: 3ecbfd17-711b-4a90-ab23-c3d78716539f	Duration: 3001.54 ms	Billed Duration: 3002 ms	Memory Size: 512 MB	Max Memory Used: 19 MB	
+2026-11-08T04:06:03Z  bd8bf430b9244a1287a36d0c8650acb6  REPORT RequestId: 5a693f23-bf27-4bbd-ad2c-5704adbf5f82	Duration: 3003.50 ms	Billed Duration: 3004 ms	Memory Size: 512 MB	Max Memory Used: 19 MB	
+2026-11-08T04:06:08Z  bd8bf430b9244a1287a36d0c8650acb6  REPORT RequestId: 15cdf1f2-9ed4-4405-a64e-f6a1297cf39b	Duration: 3001.69 ms	Billed Duration: 3002 ms	Memory Size: 512 MB	Max Memory Used: 19 MB	
+2026-11-08T04:06:13Z  bd8bf430b9244a1287a36d0c8650acb6  REPORT RequestId: 47bf9552-e9e0-4ac6-a9ec-bee04426b141	Duration: 3001.52 ms	Billed Duration: 3002 ms	Memory Size: 512 MB	Max Memory Used: 19 MB	
+2026-11-08T04:14:38Z  fb556e08a30f491aa444ac5e8dcc67b0  REPORT RequestId: 74075b8e-50e2-4ef1-ae2a-849270f09066	Duration: 3003.72 ms	Billed Duration: 3004 ms	Memory Size: 512 MB	Max Memory Used: 19 MB	

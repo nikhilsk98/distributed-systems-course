@@ -1,0 +1,14 @@
+[
+    {
+        "name": "order-api",
+        "desired": 1,
+        "running": 1,
+        "taskDef": "arn:aws:ecs:us-east-1:719602427292:task-definition/hw07-order-api:1"
+    },
+    {
+        "name": "order-processor",
+        "desired": 1,
+        "running": 1,
+        "taskDef": "arn:aws:ecs:us-east-1:719602427292:task-definition/hw07-order-processor:4"
+    }
+]

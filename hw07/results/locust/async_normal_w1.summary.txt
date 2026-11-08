@@ -1,0 +1,19 @@
+[2026-11-07 22:01:49,429] Nikhils-MacBook-Air/INFO/locust.main: Starting Locust 2.47.0
+[2026-11-07 22:01:49,431] Nikhils-MacBook-Air/INFO/locust.main: Run time limit set to 30 seconds
+[2026-11-07 22:01:49,431] Nikhils-MacBook-Air/INFO/locust.runners: Ramping to 5 users at a rate of 1.00 per second
+[2026-11-07 22:01:53,447] Nikhils-MacBook-Air/INFO/locust.runners: All users spawned: {"OrderUser": 5} (5 total users)
+[2026-11-07 22:02:19,258] Nikhils-MacBook-Air/INFO/locust.main: --run-time limit reached, shutting down
+[2026-11-07 22:02:19,332] Nikhils-MacBook-Air/INFO/locust.main: Shutting down (exit code 0)
+Type     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+POST     /orders/async                                                                    400     0(0.00%) |     46      34     210     44 |   13.44        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+         Aggregated                                                                       400     0(0.00%) |     46      34     210     44 |   13.44        0.00
+
+Response time percentiles (approximated)
+Type     Name                                                                                  50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100% # reqs
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+POST     /orders/async                                                                          44     46     49     50     53     65     86     97    210    210    210    400
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+         Aggregated                                                                             44     46     49     50     53     65     86     97    210    210    210    400
+

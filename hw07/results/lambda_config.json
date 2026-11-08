@@ -1,0 +1,9 @@
+{
+    "Runtime": "provided.al2",
+    "Memory": 512,
+    "Arch": [
+        "x86_64"
+    ],
+    "Timeout": 10,
+    "CodeSize": 2949964
+}

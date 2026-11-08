@@ -1,0 +1,9 @@
+# Part III batch 2: 2 orders after ~8 min idle since the last invocation (04:06:13Z) (2026-11-08T04:14:30Z)
+--- order 6 04:14:30
+{"order_id":"ord-1794111270292343275-882474","status":"pending"}
+
+HTTP 202 time_total=0.143177s
+--- order 7 04:14:35
+{"order_id":"ord-1794111275456217025-087106","status":"pending"}
+
+HTTP 202 time_total=0.079378s

@@ -1,0 +1,20 @@
+start 2026-11-08T02:59:51Z sync_normal
+end   2026-11-08T03:00:22Z sync_normal
+start 2026-11-08T03:00:42Z sync_flash
+end   2026-11-08T03:01:42Z sync_flash
+start 2026-11-08T03:01:49Z async_normal_w1
+end   2026-11-08T03:02:19Z async_normal_w1
+purge 2026-11-08T03:03:26Z after async_normal_w1
+start 2026-11-08T03:04:31Z async_flash_w1
+end   2026-11-08T03:05:31Z async_flash_w1
+purge 2026-11-08T03:09:46Z after async_flash_w1 (drain calculated, not waited)
+start 2026-11-08T03:12:17Z async_flash_w5
+end   2026-11-08T03:13:17Z async_flash_w5
+queue_empty 2026-11-08T03:47:38Z async_flash_w5
+start 2026-11-08T03:50:45Z async_flash_w20
+end   2026-11-08T03:51:45Z async_flash_w20
+queue_empty 2026-11-08T04:00:07Z async_flash_w20
+start 2026-11-08T04:02:38Z async_flash_w100
+end   2026-11-08T04:03:38Z async_flash_w100
+queue_empty 2026-11-08T04:05:25Z async_flash_w100
+lambda batch1 done 2026-11-08T04:06:15Z

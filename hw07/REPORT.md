@@ -90,11 +90,42 @@ Any request that waits past 60 s gets a 504 from the ALB idle timeout. The API c
 (CPU < 4 %, `results/graphs/ecs_cpu_mem_sync.png`): the bottleneck is the payment step, not the compute.
 ([sync normal report](results/screenshots/locust_sync_normal.png))
 
-## 4. Phase 2 – The math: why sync fails
+**Normal operations (expected: 100 % success rate):** met. 9 of 9 requests succeeded (0 failures), but
+"success" took 3–15 s each, because 5 users shared one payment slot.
+
+**Flash sale – "What happens to your customers?"** They wait in line. Only 19 orders completed in 60 s
+(1 every 3 s) while 20 users kept clicking. The median customer waited **30 s**, and the slowest **56 s**,
+which is right at the ALB's 60 s timeout; any later request would have failed with a 504. The ~20 requests
+still waiting when the test ended never completed. In a real shop, those customers would time out,
+refresh and resubmit (which makes the line longer), or leave. Nothing errored on our side, but the
+system is effectively down for almost everyone.
+
+## 4. Phase 2 – Analyze the bottleneck
+
+### Handout blanks
+
+| Blank | Answer | Observed |
+|---|---|---|
+| Payment processor speed | 1 order per 3 s | 3.00 s per order (sync min latency 3.08 s incl. network) |
+| With 20 concurrent customers: Maximum throughput = _ orders/second | **0.33 orders/s.** The payment step is serialized, so concurrency doesn't help: 20 customers still get 1 / 3 s | **0.33 req/s** (19 orders in 57 s) |
+| Flash sale demand | 20 orders/s (given) | – |
+| Orders lost per second = _ | 20 − 0.33 = **19.67 orders/s** (98.3 % of demand not served) | sync users sent only 19 requests in 60 s; the rest of the demand was never served |
+
+**"You can't make payment processing faster, so what CAN you change?"** When and where the customer
+waits. Accept the order immediately (persist it to a durable queue and return 202), then process payments
+in the background at whatever rate the processor allows (Phase 3). You can also increase how many payments
+run *in parallel* (workers, Phase 5) if the provider allows concurrent calls.
+
+**Note on the demand figure.** The handout uses 20 orders/s for the flash sale (and 60/s in the Part II
+story). What Locust actually generated with 20 users and 100–500 ms waits was higher. Once the API stopped
+blocking, it measured **57 orders/s**, which is the ~60/s scenario. With that demand, orders lost =
+57 − 0.33 ≈ 56.8/s. Both versions are in the table below.
+
+### Supporting math and measurements
 
 Arrival rate per Locust user = 1 / (response time + mean wait). Mean wait is (0.1 + 0.5) / 2 = 0.3 s.
 
-| Blank | Theory | Observed |
+| Quantity | Theory | Observed |
 |---|---|---|
 | Customer order rate, normal (5 users) | if the API answered instantly: 5 / (0.045 + 0.3) ≈ **14.5 orders/s** | 13.4 orders/s on `/orders/async` (400 orders in 30 s) |
 | Customer order rate, flash sale (20 users) | 20 / (0.045 + 0.3) ≈ **58 orders/s** (~60/s) | **57.1 orders/s** on `/orders/async` (≈3,415 orders in 60 s) |
@@ -133,7 +164,22 @@ With one goroutine the processor clears 1 order per 3 s. Processor logs show exa
 
 ![SQS queue, 1 worker](results/graphs/sqs_async_normal_and_flash_w1.png)
 
-| Blank | Theory | Observed |
+### Handout blanks
+
+| Blank | Answer | Observed |
+|---|---|---|
+| Order acceptance rate | ~60/s (given) | **57.1/s**, 100 % accepted (3,414 / 3,414) |
+| Single worker processing rate | 1 order per 3 s = 0.33/s (given) | **0.333/s** (exactly 5 per 15 s in the processor logs) |
+| Queue growth rate = _ messages/second | 60 − 0.33 = **59.67 msgs/s** | 57.1 − 0.33 = **56.8 msgs/s**; the queue reached 3,396 after the 60 s sale |
+| Time to clear backlog = _ minutes | **Our 60 s test:** 3,580 msgs ÷ 0.33/s ≈ 10,740 s ≈ **179 min (~3 h)** | **Measured peak 3,396 × 3 s = 10,188 s ≈ 170 min (2 h 50 min).** Calculated, not waited for. During the 4 min after the sale the backlog fell only 3,396 → 3,316 (20/min), which confirms the rate. Then purged. |
+| Same, for the story's full **one-hour** flash sale | 59.67 × 3,600 ≈ 214,800 msgs ÷ 0.33/s ≈ 644,400 s ≈ **10,740 min ≈ 7.5 days** | not run. That is longer than the queue's 4-day retention, so about half the orders would **expire unprocessed** |
+
+**"Where's my order confirmation?"** With 1 worker, the last flash-sale customer gets their confirmation
+almost 3 hours after clicking "buy". For a full one-hour sale it would be a week, or never, past the 4-day retention.
+
+### Supporting measurements
+
+| Quantity | Theory | Observed |
 |---|---|---|
 | Arrival rate during the flash sale | ≈ 58 msgs/s | 57.1 msgs/s |
 | Processing rate (1 worker) | 1 / 3 s = 0.33 msgs/s (20/min) | 0.333 msgs/s (5 per 15 s); CloudWatch `NumberOfMessagesDeleted` ≈ 20/min |
@@ -155,6 +201,19 @@ The worker count changes only the processor task's `WORKER_COUNT` env var
 (`terraform apply -target=aws_ecs_service.processor -var worker_count=N`), redeploying only that service
 (min healthy 0 %, so two worker pools never overlap). Queue depth was sampled every 5 s with
 `get-queue-attributes` (visible + in flight) and stopped after the queue had been empty for 30 s.
+
+### Handout blanks
+
+| Goroutines | Processing rate = _ | Observed rate (CloudWatch `NumberOfMessagesDeleted`) |
+|---|---|---|
+| 5 | 5 / 3 s = **1.67 orders/s** (100/min) | ≈ 100/min ✓ |
+| 20 | 20 / 3 s = **6.67 orders/s** (400/min) | ≈ 400/min ✓ |
+| 100 | 100 / 3 s = **33.3 orders/s** (2,000/min) | ≈ 2,000/min peak minute ✓ |
+
+**Minimum workers to prevent queue buildup at 60 orders/s:** workers ≥ 60 orders/s × 3 s = **180 goroutines**
+(Little's Law: L = λ·W). At our measured 57/s that is 171. With 100 goroutines the queue still grew at
+57 − 33 ≈ 24 msgs/s and peaked at 1,507. I'd run ~200–220 for headroom. CPU/memory are not the constraint:
+100 goroutines used ≤ 20 % CPU and 1.6 % memory of the 256/512 task.
 
 ![Queue depth by worker count](results/graphs/queue_depth_all_workers_5s_samples.png)
 ![SQS all Part II](results/graphs/sqs_all_part2.png)
@@ -264,11 +323,32 @@ defaulted to off). **No load test was run against Lambda.** I sent 7 orders tota
   message. During a 58/s flash sale that is ~174 concurrent executions (λ × 3 s), within the default account
   limit of 1,000 (Learner Lab accounts may have a lower limit, one more reason not to load test it here).
 
+### Handout questions
+
+- **How often do cold starts occur?** On the first request, and again after the function had been idle long
+  enough for Lambda to reclaim the environment. We saw that after ~8 min idle (2 of 7 invocations were cold).
+  Back-to-back requests 5 s apart were all warm. They also happen whenever concurrency rises: each extra concurrent
+  execution starts a new environment, so a flash sale would cause a burst of cold starts.
+- **What's the overhead?** **71.9 ms and 71.5 ms** Init Duration on a 3,002 ms invocation = **≈ 2.4 %**
+  (billed 3,075 ms vs 3,002 ms warm). This matches the handout's 73 ms / 2.4 % almost exactly.
+- **Does this matter for 3-second payment processing?** No. The overhead is small next to the 3 s payment, and the
+  customer doesn't wait on it: they already got the 202 from the API in 80–140 ms. A cold start only delays the
+  background confirmation by ~70 ms.
+
 ## 9. Cost analysis: ECS vs Lambda
 
 Pricing (us-east-1, x86): Lambda **$0.0000166667 per GB-s** + **$0.20 per 1M requests**. Free tier:
-1M requests + 400,000 GB-s per month. ECS processor cost is given as **$17/month** (always-on Fargate task plus share
-of overhead). It costs the same at 0 orders or at ~5 M orders/month, since one task can run hundreds of goroutines.
+1M requests + 400,000 GB-s per month. Part II cost (from the handout): **2 ECS tasks × $8.50/month = $17/month**,
+always running. That is the same at 0 orders or at millions of orders, since one task can run hundreds of goroutines.
+
+**Handout example: 10,000 orders/month, 3 s, 512 MB.** Requests: 10,000 < 1M free. GB-s: 10,000 × 3 × 0.5 = 15,000
+< 400K free. **Lambda = $0/month vs ECS $17/month.**
+
+**My expected volume.** Two ~1-minute flash sales per week at our measured ~3,400 orders each, plus normal traffic
+of ~5 orders/s for ~2 busy hours a day (≈ 36,000/day), comes to ≈ **1.1 M orders/month**. That gives
+1.1 M × 1.5 GB-s = 1.65 M GB-s → (1.65 M − 0.4 M) × $0.0000166667 ≈ **$20.83 compute** + (1.1 M − 1 M) × $0.20/M ≈ **$0.02
+requests → ≈ $20.85/month on Lambda at 512 MB** (vs $17 ECS). At 128 MB (our real usage is 19 MB) it is
+0.4125 M GB-s → ≈ $0.21 compute + $0.02 requests ≈ **$0.23/month**.
 
 **Cost per order on Lambda (512 MB, 3.0 s billed):**
 - Compute: 0.5 GB × 3.002 s = 1.501 GB-s × $0.0000166667 = **$0.00002502**
@@ -281,6 +361,13 @@ of overhead). It costs the same at 0 orders or at ~5 M orders/month, since one t
 - Right-sized to 128 MB (we only use 19 MB): $0.00000645 per order, so break-even ≈ **2.6 M orders/month**
   (≈ 1 order/s sustained) without the free tier, ≈ 3.7 M with it
 
+**Comparing with the handout's break-even.** The handout gets the same ~267K free orders (400K ÷ 1.5 GB-s) but
+says ~1.7M requests/month to reach $17. My calculation reaches $17 sooner. Past the free tier, each order costs
+1.5 GB-s × $0.0000166667 + $0.0000002 ≈ $0.0000252, so $17 buys 17 / 0.0000252 ≈ **674K paid orders**, and the total is
+267K + 674K ≈ **~940K orders/month** (requests stay under the 1M free tier until then). Getting to ~1.7M would need
+roughly half the per-order compute, about 0.75 GB-s, for example 256 MB at 3 s. Either way the conclusion is the same: Lambda is
+free below ~267K orders/month and cheaper than ECS below roughly 1M (512 MB) to 3.7M (128 MB) orders/month.
+
 | Monthly orders | Lambda 512 MB (no free tier) | Lambda 128 MB (no free tier) | ECS |
 |---|---|---|---|
 | 10,000 | $0.25 | $0.06 | $17 |
@@ -288,10 +375,10 @@ of overhead). It costs the same at 0 orders or at ~5 M orders/month, since one t
 | 674,000 | **$17.00** | $4.35 | $17 |
 | 1,000,000 | $25.22 | $6.45 | $17 |
 | 2,634,000 | $66.42 | **$17.00** | $17 |
-| 10,000,000 | $252.17 | $64.54 | $17 (if one task keeps up; ~$34 for two) |
+| 10,000,000 | $252.17 | $64.54 | $17 (one processor task with a few hundred goroutines keeps up) |
 
-One flash sale like ours (~3,400 orders) costs about **$0.09** on Lambda. The ECS processor runs 24/7 and
-costs ~$0.57/day even when no one is buying.
+One flash sale like ours (~3,400 orders) costs about **$0.09** on Lambda. The two ECS tasks run 24/7 and
+cost ~$0.57/day ($17/month) even when no one is buying.
 
 **Hidden factors**
 - **Lambda bills for waiting.** The 3 s is the external payment call. Lambda charges for wall-clock time while
@@ -305,16 +392,29 @@ costs ~$0.57/day even when no one is buying.
 - The NAT gateway (~$33/month + data) and ALB (~$16/month) are needed for the API either way. They are not part
   of this comparison but are actually the largest line items in this stack.
 
+### Trade-offs from the handout, checked against what we observed
+
+| | Observed / implication |
+|---|---|
+| Gain: zero operational overhead | True for the processor. No worker counts, no visibility-timeout tuning, no ECS health monitoring. We still ran the API on ECS. |
+| Gain: pay only when processing | 7 orders cost ≈ $0.00018. The ECS processor costs ~$0.28/day even at zero orders. |
+| Gain: automatic scaling | One execution per in-flight message. No Phase 5 backlog to tune. |
+| Lose: no message queuing | With SNS → Lambda directly, a burst past the concurrency limit gets throttled. SNS retries, and then the order is gone. In Part II, SQS held 3,400 orders safely for hours. |
+| Lose: retry control | Only SNS's delivery retries, no DLQ unless configured. A payment failure inside the function is just a log line. |
+| Lose: batch processing | Each invocation gets one SNS record, while the SQS consumer could receive 10 at a time. |
+| Lose: cold starts | ~72 ms / 2.4 %. Negligible here. |
+
 ### Switch recommendation
 
-**Switch the order *processor* to Lambda, keep the API on ECS, and put SQS between them (SNS → SQS → Lambda)
-instead of subscribing Lambda directly to SNS.**
+**Yes, switch the order *processor* to Lambda, keep the API on ECS, and keep a queue: put SQS between SNS and
+the Lambda (SNS → SQS → Lambda event source mapping) instead of subscribing the Lambda directly to SNS.**
 
 Why:
-1. **Our traffic is spiky, not sustained.** Flash sales are short bursts with long idle periods in between. Even
-   a busy month of ~500 k orders is below the 674 k break-even, and with 128 MB memory and the free tier the
-   break-even rises to ~3.7 M orders/month (≈ 1.4 orders/s, every second of the month). Most of the time the
-   ECS task sits idle and still costs $17.
+1. **Our traffic is spiky, not sustained.** Flash sales are short bursts with long idle periods in between. At my
+   expected ~1.1 M orders/month, Lambda at 512 MB is ≈ $20.85 (a bit more than ECS's $17). Right-sized to 128 MB,
+   which our measured 19 MB peak allows, it is ≈ **$0.23/month**, and break-even rises to ~3.7 M orders/month
+   (≈ 1.4 orders/s, every second of the month). Most of the time the ECS tasks sit idle and still cost $17.
+   Below ~267K orders/month (the startup phase), Lambda is free even at 512 MB.
 2. **Lambda fixes the Phase 4/5 problem with no tuning.** It scaled to the needed concurrency automatically, so
    the 2 h 50 min backlog we saw with 1 worker can't happen, and nobody has to pick 5, 20 or 180 workers.
 3. **Cold starts are not a factor:** ~72 ms on a 3 s background job the customer is not waiting for.
@@ -328,6 +428,64 @@ one always-on task with a few hundred goroutines is much cheaper.
 ---
 
 ## 10. Mock interview prep
+
+### Part II questions (from the handout)
+
+**How many times more orders did your asynchronous approach accept compared to your synchronous approach?**
+In the same 60 s flash sale with 20 users, async accepted **3,414 orders** (57.1/s, 0 failures, 43 ms median) and
+sync completed **19** (0.33/s, 30 s median wait). That is **≈ 180× more**. Per second it is 57.1 / 0.33 ≈ 172×. The
+gap is set by the payment step: sync can't beat 1 order per 3 s, while async is limited only by how fast the
+API can publish to SNS.
+
+**What causes queue buildup and how do you prevent it?**
+The arrival rate is higher than the processing rate. With 1 worker we accepted 57/s but processed 0.33/s, so the
+queue grew by ~57 messages/s to 3,396 and needed ~2 h 50 min to drain. To prevent it: run enough concurrent
+consumers that processing rate ≥ peak arrival rate (Little's Law: 60/s × 3 s = 180 workers; measured drain
+times scaled linearly: 5 → 34.5 min, 20 → 8.8 min, 100 → 2.1 min). Autoscale consumers on queue depth or age of
+oldest message. Use Lambda/SQS event sources that scale automatically. Pick a visibility timeout well above
+processing time and add a DLQ so poison messages don't recycle. If the downstream (payment) really can't go
+faster, add backpressure or rate-limit the front door, and make sure retention (4 days) is longer than the worst-case
+backlog (a one-hour sale with 1 worker would take 7.5 days).
+
+**When would you choose sync vs async in production?**
+Sync when the caller needs the result to continue and the work is fast and reliably bounded: login, reading
+a cart, checking stock before showing "add to cart", or validating a card number. Async when the work is slow or
+spiky, depends on a rate-limited third party, or can complete later: payment capture, fulfilment, e-mails,
+analytics. Here: validate the order synchronously (cheap), then accept it with 202 and process payment
+asynchronously, with an order-status endpoint or notification. The cost of async is eventual results, at-least-once
+delivery (so processing must be idempotent), and more moving parts to monitor.
+
+### Part III questions (from the handout)
+
+**How often did cold starts occur? Every few minutes? Every request?**
+Not every request. 2 of 7: the first invocation, and the first after ~8 minutes idle. Requests 5 s apart reused
+the same warm environment. Under real flash-sale load, cold starts would also happen once per new concurrent
+environment as Lambda scales out (~180 of them for 60 orders/s × 3 s).
+
+**Is the cost advantage compelling? For 10,000 orders/month Lambda costs $0 vs ECS $17.**
+Yes for low or spiky volume: 10K orders = 15K GB-s, well within the free tier, so $0 vs $17. Lambda stays cheaper
+until ~940K orders/month at 512 MB (my break-even, see §9) or ~3.7M at 128 MB. It is less compelling at sustained
+high volume, because Lambda bills the 3 s spent *waiting* on the payment provider, which goroutines in ECS do almost for free.
+
+**Can you accept losing SQS guarantees? Messages get 2 retries, then disappear.**
+Not for orders. Each one is revenue, and Part II showed SQS keeping 3,400 orders safe through a 3-hour backlog. A throttled
+or failed Lambda invocation that runs out of SNS retries is a lost sale with no trace except a log line.
+Two fixes: a DLQ on the SNS subscription (a redrive policy) at the very least, or SNS → SQS → Lambda, which keeps
+durability, retries, DLQs and batching while still removing the ECS workers.
+
+**Scale consideration: Lambda stays FREE until 267K orders/month.**
+Correct: 400K GB-s ÷ 1.5 GB-s per order ≈ 267K. Right-sizing memory to 128 MB (we used 19 MB) raises that to
+~1.07M orders/month free. Also watch the account's concurrency limit (default 1,000, often much lower on new or
+Learner Lab accounts). 60 orders/s × 3 s needs ~180 concurrent executions.
+
+**Should your startup switch to Lambda? Why or why not?**
+Yes, for the processor, behind SQS (see §9). Our load is bursty, so most of the time an ECS task sits idle at $17/month.
+Lambda is free or nearly free at startup volume, removes the 3 am queue alerts and manual worker scaling from
+Part III's "burnout" list, and its ~72 ms cold start is irrelevant for a 3 s background job. Keeping SQS in front
+means we don't trade away the durability that saved us in Part II. Revisit once sustained volume passes ~940K orders/month
+(512 MB) or ~3.7M (128 MB), or if the payment call gets much slower.
+
+### Additional prep
 
 **Q1. Why did the synchronous endpoint fail during the flash sale, and why wouldn't adding servers fix it?**
 Its throughput is bound by the 3 s, single-slot payment step (0.33 orders/s), while customers sent ~58/s. Each
@@ -395,9 +553,17 @@ notification, and a way to handle payment failures after the customer has left (
 
 ## 12. Cross-team comparison *(placeholder)*
 
-> **TODO:** Compare peak queue depth, drain time, Lambda cold-start durations and cost conclusions across
-> team members. Note differences in instance placement, Locust client location, payment-concurrency
-> assumptions and worker counts, and agree on a final team recommendation.
+> **TODO (team):** For each metric, say **where results match, where they differ, and why**, and label
+> every number with the teammate it came from. Suggested rows: sync throughput and latency (normal and flash),
+> async acceptance rate and latency, peak queue depth and time-to-zero for 1/5/20/100 workers, processor
+> CPU/memory, Lambda cold-start Init Duration and frequency, break-even and cost for expected volume, and
+> each switch recommendation. Likely causes of differences: payment-limiter design (buffered-channel
+> capacity, which sets sync throughput), how many messages the processor pulls per receive, Locust client
+> location/network latency (sets the async arrival rate), AZ placement, and the CloudWatch 1-minute sampling
+> of `ApproximateNumberOfMessagesVisible` vs direct polling. End with a single agreed team recommendation.
+>
+> My numbers to compare: sync 0.33 req/s; async 57.1 req/s; peaks 3,396 / 3,317 / 2,993 / 1,507;
+> drain ≈ 170 min (calc.) / 34.5 / 8.8 / 2.1 min; cold start 71.5–71.9 ms (2 of 7).
 
 ---
 

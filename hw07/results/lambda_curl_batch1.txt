@@ -1,0 +1,21 @@
+# Part III batch 1: 5 orders, sent one at a time ~5s apart (2026-11-08T04:05:49Z)
+--- order 1 04:05:49
+{"order_id":"ord-1794110749763729160-512034","status":"pending"}
+
+HTTP 202 time_total=0.127485s
+--- order 2 04:05:54
+{"order_id":"ord-1794110754907497301-139592","status":"pending"}
+
+HTTP 202 time_total=0.081653s
+--- order 3 04:05:59
+{"order_id":"ord-1794110760025863852-438148","status":"pending"}
+
+HTTP 202 time_total=0.088211s
+--- order 4 04:06:05
+{"order_id":"ord-1794110765133967819-885973","status":"pending"}
+
+HTTP 202 time_total=0.076365s
+--- order 5 04:06:10
+{"order_id":"ord-1794110770255700599-328734","status":"pending"}
+
+HTTP 202 time_total=0.087338s

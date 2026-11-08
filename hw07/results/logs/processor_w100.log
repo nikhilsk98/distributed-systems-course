@@ -1,0 +1,18 @@
+2026-11-08T04:00:33.776000+00:00 processor/order-processor/dcee2aa668c84d71a68d63fa77df6356 2026/11/08 04:00:33 shutting down, waiting for 0 in-flight orders
+2026-11-08T04:00:33.776000+00:00 processor/order-processor/dcee2aa668c84d71a68d63fa77df6356 2026/11/08 04:00:33 stopped; processed=3413
+2026-11-08T04:01:26.980000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:01:26 order-processor started workers=100 delay=3s queue=https://sqs.us-east-1.amazonaws.com/719602427292/order-processing-queue
+2026-11-08T04:01:41.984000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:01:41 stats processed=0 active=0 workers=100
+2026-11-08T04:01:56.991000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:01:56 stats processed=0 active=0 workers=100
+2026-11-08T04:02:11.984000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:02:11 stats processed=0 active=0 workers=100
+2026-11-08T04:02:26.995000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:02:26 stats processed=0 active=0 workers=100
+2026-11-08T04:02:41.982000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:02:41 stats processed=0 active=100 workers=100
+2026-11-08T04:02:56.982000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:02:56 stats processed=500 active=100 workers=100
+2026-11-08T04:03:11.982000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:03:11 stats processed=1000 active=100 workers=100
+2026-11-08T04:03:26.982000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:03:26 stats processed=1500 active=100 workers=100
+2026-11-08T04:03:41.983000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:03:41 stats processed=2000 active=100 workers=100
+2026-11-08T04:03:56.982000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:03:56 stats processed=2500 active=100 workers=100
+2026-11-08T04:04:11.982000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:04:11 stats processed=3000 active=100 workers=100
+2026-11-08T04:04:26.983000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:04:26 stats processed=3416 active=0 workers=100
+2026-11-08T04:04:41.983000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:04:41 stats processed=3416 active=0 workers=100
+2026-11-08T04:04:56.994000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:04:56 stats processed=3416 active=0 workers=100
+2026-11-08T04:05:11.984000+00:00 processor/order-processor/7d7d6f246787467d9d07a07eebbd2b6f 2026/11/08 04:05:11 stats processed=3416 active=0 workers=100

@@ -1,0 +1,20 @@
+{
+    "family": "hw07-order-processor",
+    "revision": 4,
+    "cpu": "256",
+    "memory": "512",
+    "env": [
+        {
+            "name": "WORKER_COUNT",
+            "value": "100"
+        },
+        {
+            "name": "SQS_QUEUE_URL",
+            "value": "https://sqs.us-east-1.amazonaws.com/719602427292/order-processing-queue"
+        },
+        {
+            "name": "AWS_REGION",
+            "value": "us-east-1"
+        }
+    ]
+}

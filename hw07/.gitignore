@@ -21,3 +21,6 @@ credentials
 
 .DS_Store
 __pycache__/
+
+# Course handout (kept locally, not published)
+ASSIGNMENT.md
